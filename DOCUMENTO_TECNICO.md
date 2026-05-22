@@ -173,27 +173,27 @@ Sites (1) ──── (N) Accommodations (1) ──── (N) Rooms
 
 ### Relaciones principales
 
-| Relación | Tipo | Descripción |
-|----------|------|-------------|
-| Site → Accommodation | 1:N | Una sede tiene múltiples alojamientos |
-| Accommodation → Room | 1:N | Un alojamiento tiene múltiples habitaciones |
-| Room → Rate | 1:N | Una habitación tiene tarifas por temporada |
-| Season → Rate | 1:N | Una temporada define tarifas para múltiples habitaciones |
-| ApplicationUser → Reservation | 1:N | Un usuario puede tener múltiples reservas |
-| Reservation → ReservationDetail | 1:N | Una reserva puede incluir múltiples habitaciones |
-| Room → ReservationDetail | 1:N | Una habitación puede estar en múltiples reservas |
-| ApplicationUser → Favorite | 1:N | Un usuario puede marcar habitaciones como favoritas |
-| Room → Favorite | 1:N | Una habitación puede ser favorita de múltiples usuarios |
+| Relación                        | Tipo | Descripción                                              |
+| ------------------------------- | ---- | -------------------------------------------------------- |
+| Site → Accommodation            | 1:N  | Una sede tiene múltiples alojamientos                    |
+| Accommodation → Room            | 1:N  | Un alojamiento tiene múltiples habitaciones              |
+| Room → Rate                     | 1:N  | Una habitación tiene tarifas por temporada               |
+| Season → Rate                   | 1:N  | Una temporada define tarifas para múltiples habitaciones |
+| ApplicationUser → Reservation   | 1:N  | Un usuario puede tener múltiples reservas                |
+| Reservation → ReservationDetail | 1:N  | Una reserva puede incluir múltiples habitaciones         |
+| Room → ReservationDetail        | 1:N  | Una habitación puede estar en múltiples reservas         |
+| ApplicationUser → Favorite      | 1:N  | Un usuario puede marcar habitaciones como favoritas      |
+| Room → Favorite                 | 1:N  | Una habitación puede ser favorita de múltiples usuarios  |
 
 ### Índices
 
-| Tabla | Índice | Tipo | Columnas |
-|-------|--------|------|----------|
-| Rooms | IX_Rooms_Accommodation_Number | Unique | AccommodationId, RoomNumber |
-| Rates | IX_Rates_Room_Season_Kind | Unique | RoomId, SeasonId, Kind |
-| Favorites | IX_Favorites_User_Room | Unique | UserId, RoomId |
-| ReservationDetails | IX_ReservationDetail_Reservation | — | ReservationId |
-| ReservationDetails | IX_ReservationDetail_Room | — | RoomId |
+| Tabla              | Índice                           | Tipo   | Columnas                    |
+| ------------------ | -------------------------------- | ------ | --------------------------- |
+| Rooms              | IX_Rooms_Accommodation_Number    | Unique | AccommodationId, RoomNumber |
+| Rates              | IX_Rates_Room_Season_Kind        | Unique | RoomId, SeasonId, Kind      |
+| Favorites          | IX_Favorites_User_Room           | Unique | UserId, RoomId              |
+| ReservationDetails | IX_ReservationDetail_Reservation | —      | ReservationId               |
+| ReservationDetails | IX_ReservationDetail_Room        | —      | RoomId                      |
 
 ---
 
@@ -203,16 +203,16 @@ Sites (1) ──── (N) Accommodations (1) ──── (N) Rooms
 
 Representa las sedes recreativas y apartamentos del Fondo XYZ.
 
-| Columna | Tipo | Descripción |
-|---------|------|-------------|
-| Id | int (PK) | Identificador único |
-| Name | nvarchar(200) | Nombre de la sede |
-| City | nvarchar(100) | Ciudad |
-| Address | nvarchar(500) | Dirección |
-| Description | nvarchar(MAX) | Descripción detallada |
-| MaxCapacity | int | Capacidad máxima de personas |
-| ImageUrl | nvarchar(500) | URL de imagen |
-| IsActive | bit | Estado activo/inactivo (soft delete) |
+| Columna     | Tipo          | Descripción                          |
+| ----------- | ------------- | ------------------------------------ |
+| Id          | int (PK)      | Identificador único                  |
+| Name        | nvarchar(200) | Nombre de la sede                    |
+| City        | nvarchar(100) | Ciudad                               |
+| Address     | nvarchar(500) | Dirección                            |
+| Description | nvarchar(MAX) | Descripción detallada                |
+| MaxCapacity | int           | Capacidad máxima de personas         |
+| ImageUrl    | nvarchar(500) | URL de imagen                        |
+| IsActive    | bit           | Estado activo/inactivo (soft delete) |
 
 **Sedes FODUN cargadas**: Villeta, El Placer (Fusagasugá), Gonzalo Morante (Chinchiná), Tablones (Palmira), Manguruma (Santa Fe de Antioquia), Federmán (Bogotá), Suramericana (Medellín), El Rodadero (Santa Marta).
 
@@ -220,73 +220,73 @@ Representa las sedes recreativas y apartamentos del Fondo XYZ.
 
 Bloques de alojamiento dentro de una sede.
 
-| Columna | Tipo | Descripción |
-|---------|------|-------------|
-| Id | int (PK) | Identificador único |
-| Name | nvarchar(200) | Nombre del alojamiento |
-| Description | nvarchar(MAX) | Descripción |
-| SiteId | int (FK → Sites) | Sede a la que pertenece |
-| IsActive | bit | Estado activo/inactivo |
+| Columna     | Tipo             | Descripción             |
+| ----------- | ---------------- | ----------------------- |
+| Id          | int (PK)         | Identificador único     |
+| Name        | nvarchar(200)    | Nombre del alojamiento  |
+| Description | nvarchar(MAX)    | Descripción             |
+| SiteId      | int (FK → Sites) | Sede a la que pertenece |
+| IsActive    | bit              | Estado activo/inactivo  |
 
 ### Rooms (Habitaciones)
 
 Habitaciones individuales con tipo y capacidad.
 
-| Columna | Tipo | Descripción |
-|---------|------|-------------|
-| Id | int (PK) | Identificador único |
-| RoomNumber | nvarchar(20) | Número/código de habitación |
-| Type | int (enum RoomType) | Tipo: Single, Double, Twin, Suite, Deluxe, Family, Cabin, Apartment |
-| MaxGuests | int | Capacidad máxima de huéspedes |
-| BasePrice | decimal(18,2) | Precio base por noche (fallback si no hay Rate) |
-| Description | nvarchar(MAX) | Descripción |
-| AccommodationId | int (FK → Accommodations) | Alojamiento al que pertenece |
-| IsActive | bit | Estado activo/inactivo |
+| Columna         | Tipo                      | Descripción                                                         |
+| --------------- | ------------------------- | ------------------------------------------------------------------- |
+| Id              | int (PK)                  | Identificador único                                                 |
+| RoomNumber      | nvarchar(20)              | Número/código de habitación                                         |
+| Type            | int (enum RoomType)       | Tipo: Single, Double, Twin, Suite, Deluxe, Family, Cabin, Apartment |
+| MaxGuests       | int                       | Capacidad máxima de huéspedes                                       |
+| BasePrice       | decimal(18,2)             | Precio base por noche (fallback si no hay Rate)                     |
+| Description     | nvarchar(MAX)             | Descripción                                                         |
+| AccommodationId | int (FK → Accommodations) | Alojamiento al que pertenece                                        |
+| IsActive        | bit                       | Estado activo/inactivo                                              |
 
 ### Seasons (Temporadas)
 
 Períodos con multiplicador de precio.
 
-| Columna | Tipo | Descripción |
-|---------|------|-------------|
-| Id | int (PK) | Identificador único |
-| Name | nvarchar(100) | Nombre (Baja, Alta, Especial) |
-| StartDate | date | Fecha de inicio |
-| EndDate | date | Fecha de fin |
-| PriceMultiplier | decimal(5,2) | Multiplicador de precio (1.0 = sin cambio) |
-| IsActive | bit | Estado activo/inactivo |
+| Columna         | Tipo          | Descripción                                |
+| --------------- | ------------- | ------------------------------------------ |
+| Id              | int (PK)      | Identificador único                        |
+| Name            | nvarchar(100) | Nombre (Baja, Alta, Especial)              |
+| StartDate       | date          | Fecha de inicio                            |
+| EndDate         | date          | Fecha de fin                               |
+| PriceMultiplier | decimal(5,2)  | Multiplicador de precio (1.0 = sin cambio) |
+| IsActive        | bit           | Estado activo/inactivo                     |
 
 ### Rates (Tarifas)
 
 Tarifa por habitación + temporada + tipo.
 
-| Columna | Tipo | Descripción |
-|---------|------|-------------|
-| Id | int (PK) | Identificador único |
-| PricePerNight | decimal(18,2) | Precio por noche |
-| BaseGuests | int | Huéspedes incluidos en el precio base |
-| ExtraPersonPrice | decimal(18,2) | Precio por persona adicional |
-| Kind | int (enum RateKind) | 0 = Standard, 1 = SpecialWeekday (Lun-Jue) |
-| RoomId | int (FK → Rooms) | Habitación |
-| SeasonId | int (FK → Seasons) | Temporada |
-| IsActive | bit | Estado activo/inactivo |
+| Columna          | Tipo                | Descripción                                |
+| ---------------- | ------------------- | ------------------------------------------ |
+| Id               | int (PK)            | Identificador único                        |
+| PricePerNight    | decimal(18,2)       | Precio por noche                           |
+| BaseGuests       | int                 | Huéspedes incluidos en el precio base      |
+| ExtraPersonPrice | decimal(18,2)       | Precio por persona adicional               |
+| Kind             | int (enum RateKind) | 0 = Standard, 1 = SpecialWeekday (Lun-Jue) |
+| RoomId           | int (FK → Rooms)    | Habitación                                 |
+| SeasonId         | int (FK → Seasons)  | Temporada                                  |
+| IsActive         | bit                 | Estado activo/inactivo                     |
 
 ### Reservations (Reservas)
 
 Reservas de los usuarios.
 
-| Columna | Tipo | Descripción |
-|---------|------|-------------|
-| Id | int (PK) | Identificador único |
-| CheckIn | date | Fecha de entrada |
-| CheckOut | date | Fecha de salida |
-| TotalGuests | int | Número total de huéspedes |
-| TotalPrice | decimal(18,2) | Precio total calculado |
-| Status | int (enum ReservationStatus) | Estado del flujo |
-| Notes | nvarchar(MAX) | Notas adicionales |
-| UserId | nvarchar(450) (FK → AspNetUsers) | Usuario que reservó |
-| CreatedAt | datetime2 | Fecha de creación |
-| UpdatedAt | datetime2 | Última modificación |
+| Columna     | Tipo                             | Descripción               |
+| ----------- | -------------------------------- | ------------------------- |
+| Id          | int (PK)                         | Identificador único       |
+| CheckIn     | date                             | Fecha de entrada          |
+| CheckOut    | date                             | Fecha de salida           |
+| TotalGuests | int                              | Número total de huéspedes |
+| TotalPrice  | decimal(18,2)                    | Precio total calculado    |
+| Status      | int (enum ReservationStatus)     | Estado del flujo          |
+| Notes       | nvarchar(MAX)                    | Notas adicionales         |
+| UserId      | nvarchar(450) (FK → AspNetUsers) | Usuario que reservó       |
+| CreatedAt   | datetime2                        | Fecha de creación         |
+| UpdatedAt   | datetime2                        | Última modificación       |
 
 **Estados del flujo**: Pending (0) → Confirmed (1) → CheckedIn (2) → CheckedOut (3). También: Cancelled (5), NoShow (4).
 
@@ -294,14 +294,14 @@ Reservas de los usuarios.
 
 Líneas de detalle por habitación reservada.
 
-| Columna | Tipo | Descripción |
-|---------|------|-------------|
-| Id | int (PK) | Identificador único |
-| ReservationId | int (FK → Reservations) | Reserva padre |
-| RoomId | int (FK → Rooms) | Habitación reservada |
-| PricePerNight | decimal(18,2) | Precio por noche al momento de la reserva |
-| Subtotal | decimal(18,2) | Subtotal de esta línea |
-| GuestsInRoom | int | Huéspedes asignados a esta habitación |
+| Columna       | Tipo                    | Descripción                               |
+| ------------- | ----------------------- | ----------------------------------------- |
+| Id            | int (PK)                | Identificador único                       |
+| ReservationId | int (FK → Reservations) | Reserva padre                             |
+| RoomId        | int (FK → Rooms)        | Habitación reservada                      |
+| PricePerNight | decimal(18,2)           | Precio por noche al momento de la reserva |
+| Subtotal      | decimal(18,2)           | Subtotal de esta línea                    |
+| GuestsInRoom  | int                     | Huéspedes asignados a esta habitación     |
 
 ---
 
@@ -359,24 +359,24 @@ IReservationRepository (especializado)
 
 ### Configuración
 
-| Parámetro | Valor |
-|-----------|-------|
-| **Longitud mínima de contraseña** | 8 caracteres |
-| **Requiere mayúscula** | Sí |
-| **Requiere minúscula** | Sí |
-| **Requiere dígito** | Sí |
-| **Requiere carácter especial** | Sí |
-| **Bloqueo por intentos fallidos** | 5 intentos → 15 minutos |
-| **Confirmación de email** | Configurable por entorno |
+| Parámetro                         | Valor                    |
+| --------------------------------- | ------------------------ |
+| **Longitud mínima de contraseña** | 8 caracteres             |
+| **Requiere mayúscula**            | Sí                       |
+| **Requiere minúscula**            | Sí                       |
+| **Requiere dígito**               | Sí                       |
+| **Requiere carácter especial**    | Sí                       |
+| **Bloqueo por intentos fallidos** | 5 intentos → 15 minutos  |
+| **Confirmación de email**         | Configurable por entorno |
 
 ### Roles
 
-| Rol | Permisos |
-|-----|----------|
-| **Admin** | CRUD completo, gestión de reservas, dashboard |
-| **Receptionist** | Gestión de reservas y check-in/check-out |
-| **Guest** | Consultar disponibilidad, crear reservas, ver mis reservas |
-| **Cliente** | Igual que Guest (alias para asociados) |
+| Rol              | Permisos                                                   |
+| ---------------- | ---------------------------------------------------------- |
+| **Admin**        | CRUD completo, gestión de reservas, dashboard              |
+| **Receptionist** | Gestión de reservas y check-in/check-out                   |
+| **Guest**        | Consultar disponibilidad, crear reservas, ver mis reservas |
+| **Cliente**      | Igual que Guest (alias para asociados)                     |
 
 ### Personalización
 
@@ -462,13 +462,13 @@ SP2 agrega el filtro `r.MaxGuests >= @Guests` para mostrar solo habitaciones con
 
 El motor de tarificación implementa las reglas específicas del Fondo XYZ:
 
-| Concepto | Regla |
-|----------|-------|
-| **Tarifa base** | Precio por noche para hasta `BaseGuests` personas |
-| **Persona adicional** | `ExtraPersonPrice` por cada huésped adicional sobre `BaseGuests` |
-| **Tarifa especial Lun-Jue** | Precio reducido aplicable de lunes a jueves, excepto en alta temporada |
-| **Multiplicador de temporada** | `PriceMultiplier` de la temporada vigente (1.0 = baja, >1.0 = alta) |
-| **Fallback** | Si no hay tarifa configurada, se usa `Room.BasePrice` |
+| Concepto                       | Regla                                                                  |
+| ------------------------------ | ---------------------------------------------------------------------- |
+| **Tarifa base**                | Precio por noche para hasta `BaseGuests` personas                      |
+| **Persona adicional**          | `ExtraPersonPrice` por cada huésped adicional sobre `BaseGuests`       |
+| **Tarifa especial Lun-Jue**    | Precio reducido aplicable de lunes a jueves, excepto en alta temporada |
+| **Multiplicador de temporada** | `PriceMultiplier` de la temporada vigente (1.0 = baja, >1.0 = alta)    |
+| **Fallback**                   | Si no hay tarifa configurada, se usa `Room.BasePrice`                  |
 
 ### Cálculo día por día
 
@@ -494,11 +494,11 @@ Reserva de 3 noches (viernes a lunes) para 6 personas:
 - Temporada baja (PriceMultiplier = 1.0).
 - Tarifa especial Lun-Jue: $27.000/noche para 4 personas, extra $11.000/persona.
 
-| Noche | Día | Tarifa base | Extra (2 personas) | Total noche |
-|-------|-----|-------------|-------------------|-------------|
-| 1 | Viernes | $70.000 × 1.0 | 2 × $16.000 | $102.000 |
-| 2 | Sábado | $70.000 × 1.0 | 2 × $16.000 | $102.000 |
-| 3 | Domingo | $70.000 × 1.0 | 2 × $16.000 | $102.000 |
+| Noche | Día     | Tarifa base   | Extra (2 personas) | Total noche |
+| ----- | ------- | ------------- | ------------------ | ----------- |
+| 1     | Viernes | $70.000 × 1.0 | 2 × $16.000        | $102.000    |
+| 2     | Sábado  | $70.000 × 1.0 | 2 × $16.000        | $102.000    |
+| 3     | Domingo | $70.000 × 1.0 | 2 × $16.000        | $102.000    |
 
 **Total**: $306.000
 
@@ -514,11 +514,11 @@ Se implementaron **6 Stored Procedures** en SQL Server, cubriendo los 4 requerid
 
 **Requisito**: Encontrar habitaciones disponibles en un rango de fechas.
 
-| Parámetro | Tipo | Dirección |
-|-----------|------|-----------|
-| `@CheckIn` | DATE | Entrada |
-| `@CheckOut` | DATE | Entrada |
-| Resultado | Tabla | Salida |
+| Parámetro   | Tipo  | Dirección |
+| ----------- | ----- | --------- |
+| `@CheckIn`  | DATE  | Entrada   |
+| `@CheckOut` | DATE  | Entrada   |
+| Resultado   | Tabla | Salida    |
 
 **Lógica**: Selecciona todas las habitaciones activas cuyo Id no aparezca en ReservationDetails de reservas no canceladas que se solapen con el rango solicitado. Ordena por precio.
 
@@ -526,12 +526,12 @@ Se implementaron **6 Stored Procedures** en SQL Server, cubriendo los 4 requerid
 
 **Requisito**: Encontrar habitaciones disponibles por fechas + número de personas.
 
-| Parámetro | Tipo | Dirección |
-|-----------|------|-----------|
-| `@CheckIn` | DATE | Entrada |
-| `@CheckOut` | DATE | Entrada |
-| `@Guests` | INT | Entrada |
-| Resultado | Tabla | Salida |
+| Parámetro   | Tipo  | Dirección |
+| ----------- | ----- | --------- |
+| `@CheckIn`  | DATE  | Entrada   |
+| `@CheckOut` | DATE  | Entrada   |
+| `@Guests`   | INT   | Entrada   |
+| Resultado   | Tabla | Salida    |
 
 **Lógica**: Igual que SP1, agregando el filtro `MaxGuests >= @Guests`.
 
@@ -539,10 +539,10 @@ Se implementaron **6 Stored Procedures** en SQL Server, cubriendo los 4 requerid
 
 **Requisito**: Ver tarifas según sitio, temporada, personas y alojamiento.
 
-| Parámetro | Tipo | Dirección |
-|-----------|------|-----------|
-| `@RoomId` | INT | Entrada |
-| Resultado | Tabla | Salida |
+| Parámetro | Tipo  | Dirección |
+| --------- | ----- | --------- |
+| `@RoomId` | INT   | Entrada   |
+| Resultado | Tabla | Salida    |
 
 **Lógica**: JOIN entre Rates, Seasons y Rooms para obtener todas las tarifas configuradas de una habitación con sus temporadas.
 
@@ -550,13 +550,13 @@ Se implementaron **6 Stored Procedures** en SQL Server, cubriendo los 4 requerid
 
 **Requisito**: Calcular la tarifa a cancelar según sitio, habitaciones, personas, alojamiento y temporada.
 
-| Parámetro | Tipo | Dirección |
-|-----------|------|-----------|
-| `@RoomId` | INT | Entrada |
-| `@CheckIn` | DATE | Entrada |
-| `@CheckOut` | DATE | Entrada |
-| `@TotalGuests` | INT | Entrada |
-| `@TotalRate` | DECIMAL(18,2) | Salida |
+| Parámetro      | Tipo          | Dirección |
+| -------------- | ------------- | --------- |
+| `@RoomId`      | INT           | Entrada   |
+| `@CheckIn`     | DATE          | Entrada   |
+| `@CheckOut`    | DATE          | Entrada   |
+| `@TotalGuests` | INT           | Entrada   |
+| `@TotalRate`   | DECIMAL(18,2) | Salida    |
 
 **Lógica**: Motor de tarificación iterativo (día por día). Usa `SET DATEFIRST 1` para que lunes sea día 1. Aplica tarifa especial Lun-Jue cuando PriceMultiplier ≤ 1. Fallback a BasePrice si no hay tarifa configurada. Incluye cálculo de personas extra.
 
@@ -564,27 +564,27 @@ Se implementaron **6 Stored Procedures** en SQL Server, cubriendo los 4 requerid
 
 Verifica si una habitación tiene reservas solapadas.
 
-| Parámetro | Tipo | Dirección |
-|-----------|------|-----------|
-| `@RoomId` | INT | Entrada |
-| `@CheckIn` | DATE | Entrada |
-| `@CheckOut` | DATE | Entrada |
-| `@ExcludeReservationId` | INT NULL | Entrada |
-| `@IsOverbooked` | BIT | Salida |
+| Parámetro               | Tipo     | Dirección |
+| ----------------------- | -------- | --------- |
+| `@RoomId`               | INT      | Entrada   |
+| `@CheckIn`              | DATE     | Entrada   |
+| `@CheckOut`             | DATE     | Entrada   |
+| `@ExcludeReservationId` | INT NULL | Entrada   |
+| `@IsOverbooked`         | BIT      | Salida    |
 
 ### SP6: `sp_GetRatesByCriteria` (auxiliar)
 
 Consulta avanzada de tarifas cruzando múltiples filtros opcionales. Calcula `EffectivePricePerNight` incluyendo multiplicador de temporada y extras por persona.
 
-| Parámetro | Tipo | Dirección |
-|-----------|------|-----------|
-| `@SiteId` | INT NULL | Entrada |
-| `@AccommodationId` | INT NULL | Entrada |
-| `@SeasonId` | INT NULL | Entrada |
-| `@Guests` | INT NULL | Entrada |
-| `@CheckIn` | DATE NULL | Entrada |
-| `@CheckOut` | DATE NULL | Entrada |
-| Resultado | Tabla | Salida |
+| Parámetro          | Tipo      | Dirección |
+| ------------------ | --------- | --------- |
+| `@SiteId`          | INT NULL  | Entrada   |
+| `@AccommodationId` | INT NULL  | Entrada   |
+| `@SeasonId`        | INT NULL  | Entrada   |
+| `@Guests`          | INT NULL  | Entrada   |
+| `@CheckIn`         | DATE NULL | Entrada   |
+| `@CheckOut`        | DATE NULL | Entrada   |
+| Resultado          | Tabla     | Salida    |
 
 ### Seguridad en SPs
 
@@ -627,19 +627,19 @@ Las credenciales SMTP se configuran mediante variables de entorno (en Docker) o 
 
 ### Protocolos soportados
 
-| Puerto | Protocolo | Uso |
-|--------|-----------|-----|
-| 465 | SSL | Conexión directa con SSL |
-| 587 | STARTTLS | Conexión con upgrade a TLS |
-| Otro | Auto | Detección automática |
+| Puerto | Protocolo | Uso                        |
+| ------ | --------- | -------------------------- |
+| 465    | SSL       | Conexión directa con SSL   |
+| 587    | STARTTLS  | Conexión con upgrade a TLS |
+| Otro   | Auto      | Detección automática       |
 
 ### Tipos de email
 
-| Tipo | Plantilla | Descripción |
-|------|-----------|-------------|
-| Confirmación de email | `ConfirmEmailTemplate` | Enlace para verificar cuenta |
+| Tipo                           | Plantilla               | Descripción                        |
+| ------------------------------ | ----------------------- | ---------------------------------- |
+| Confirmación de email          | `ConfirmEmailTemplate`  | Enlace para verificar cuenta       |
 | Restablecimiento de contraseña | `ResetPasswordTemplate` | Enlace para crear nueva contraseña |
-| Notificación de reserva | `ReservationTemplate` | Confirmación de reserva creada |
+| Notificación de reserva        | `ReservationTemplate`   | Confirmación de reserva creada     |
 
 ### Seguridad SMTP
 
@@ -669,16 +669,17 @@ Etapa 2: Runtime (aspnet:8.0)
 
 ### Docker Compose
 
-| Servicio | Imagen | Puertos | Volúmenes | Dependencias |
-|----------|--------|---------|-----------|-------------|
-| sqlserver | mssql/server:2022-latest | 1433 | sqldata | — |
-| web | Build local | 5000 | — | sqlserver (healthy) |
-| nginx | nginx:alpine | 80, 443 | nginx.conf, certbot-etc, certbot-var | web |
-| certbot | certbot/certbot | — | certbot-etc, certbot-var | nginx |
+| Servicio  | Imagen                   | Puertos | Volúmenes                            | Dependencias        |
+| --------- | ------------------------ | ------- | ------------------------------------ | ------------------- |
+| sqlserver | mssql/server:2022-latest | 1433    | sqldata                              | —                   |
+| web       | Build local              | 5000    | —                                    | sqlserver (healthy) |
+| nginx     | nginx:alpine             | 80, 443 | nginx.conf, certbot-etc, certbot-var | web                 |
+| certbot   | certbot/certbot          | —       | certbot-etc, certbot-var             | nginx               |
 
 ### Health checks
 
 SQL Server tiene un healthcheck con:
+
 - Dual path fallback (`/opt/mssql-tools18/` o `/opt/mssql-tools/`).
 - Intervalo: 15s, timeout: 10s, retries: 15, start_period: 60s.
 
@@ -692,15 +693,15 @@ Todos los servicios usan `restart: unless-stopped` para reinicio automático.
 
 ### Infraestructura
 
-| Componente | Detalle |
-|-----------|---------|
-| Proveedor | Google Cloud Platform |
+| Componente        | Detalle                      |
+| ----------------- | ---------------------------- |
+| Proveedor         | Google Cloud Platform        |
 | Tipo de instancia | e2-medium (2 vCPU, 4 GB RAM) |
-| Sistema operativo | Ubuntu 22.04 LTS |
-| Almacenamiento | 40 GB SSD |
-| IP estática | Asignada |
-| Dominio | Gestionado en Hostinger |
-| SSL | Let's Encrypt (Certbot) |
+| Sistema operativo | Ubuntu 22.04 LTS             |
+| Almacenamiento    | 40 GB SSD                    |
+| IP estática       | Asignada                     |
+| Dominio           | Gestionado en Hostinger      |
+| SSL               | Let's Encrypt (Certbot)      |
 
 ### Proceso de despliegue
 
@@ -726,50 +727,50 @@ Todos los servicios usan `restart: unless-stopped` para reinicio automático.
 
 ### Resumen de controles implementados
 
-| Vulnerabilidad OWASP | Control | Implementación |
-|----------------------|---------|---------------|
-| **A01: Broken Access Control** | Autorización por roles | `[Authorize(Roles = "Admin")]`, verificación de propiedad de reservas |
-| **A02: Cryptographic Failures** | Hashing de contraseñas | ASP.NET Identity (PBKDF2 con salt) |
-| **A03: Injection** | Parámetros tipados | EF Core parametrizado, SPs con SqlParameter |
-| **A04: Insecure Design** | Transacción SERIALIZABLE | Prevención de overbooking en reservas concurrentes |
-| **A05: Security Misconfiguration** | Variables de entorno | Secrets en .env (no en código), .gitignore configurado |
-| **A06: Vulnerable Components** | Dependencias actualizadas | NuGet packages 8.0.25 |
-| **A07: Auth Failures** | Bloqueo de cuenta | 5 intentos → 15 min lockout |
-| **A08: Data Integrity** | Anti-forgery tokens | `[ValidateAntiForgeryToken]` en todos los POST |
-| **A09: Logging Failures** | Logging estructurado | Microsoft.Extensions.Logging |
-| **A10: SSRF** | No aplica | No hay llamadas HTTP a URLs externas definidas por usuario |
+| Vulnerabilidad OWASP               | Control                   | Implementación                                                        |
+| ---------------------------------- | ------------------------- | --------------------------------------------------------------------- |
+| **A01: Broken Access Control**     | Autorización por roles    | `[Authorize(Roles = "Admin")]`, verificación de propiedad de reservas |
+| **A02: Cryptographic Failures**    | Hashing de contraseñas    | ASP.NET Identity (PBKDF2 con salt)                                    |
+| **A03: Injection**                 | Parámetros tipados        | EF Core parametrizado, SPs con SqlParameter                           |
+| **A04: Insecure Design**           | Transacción SERIALIZABLE  | Prevención de overbooking en reservas concurrentes                    |
+| **A05: Security Misconfiguration** | Variables de entorno      | Secrets en .env (no en código), .gitignore configurado                |
+| **A06: Vulnerable Components**     | Dependencias actualizadas | NuGet packages 8.0.25                                                 |
+| **A07: Auth Failures**             | Bloqueo de cuenta         | 5 intentos → 15 min lockout                                           |
+| **A08: Data Integrity**            | Anti-forgery tokens       | `[ValidateAntiForgeryToken]` en todos los POST                        |
+| **A09: Logging Failures**          | Logging estructurado      | Microsoft.Extensions.Logging                                          |
+| **A10: SSRF**                      | No aplica                 | No hay llamadas HTTP a URLs externas definidas por usuario            |
 
 ### Gestión de secretos
 
-| Secreto | Ubicación | Expuesto en Git |
-|---------|-----------|----------------|
-| Contraseña SMTP | `.env` (Docker) / `appsettings.Development.json` (local) | ❌ No |
-| Password SA SQL Server | `.env` (Docker) | ❌ No |
-| Connection string producción | Variable de entorno Docker | ❌ No |
-| `appsettings.Development.json` | Local solamente | ❌ No (en `.gitignore`) |
-| `appsettings.json` | Git | ✅ Solo placeholders |
-| `appsettings.Production.json` | Git | ✅ Solo placeholders |
-| `.env.example` | Git | ✅ Solo placeholders |
+| Secreto                        | Ubicación                                                | Expuesto en Git         |
+| ------------------------------ | -------------------------------------------------------- | ----------------------- |
+| Contraseña SMTP                | `.env` (Docker) / `appsettings.Development.json` (local) | ❌ No                   |
+| Password SA SQL Server         | `.env` (Docker)                                          | ❌ No                   |
+| Connection string producción   | Variable de entorno Docker                               | ❌ No                   |
+| `appsettings.Development.json` | Local solamente                                          | ❌ No (en `.gitignore`) |
+| `appsettings.json`             | Git                                                      | ✅ Solo placeholders    |
+| `appsettings.Production.json`  | Git                                                      | ✅ Solo placeholders    |
+| `.env.example`                 | Git                                                      | ✅ Solo placeholders    |
 
 ---
 
 ## 17. Tecnologías y Librerías
 
-| Librería | Versión | Propósito |
-|----------|---------|-----------|
-| Microsoft.AspNetCore (SDK) | 8.0 | Framework web MVC |
-| Microsoft.EntityFrameworkCore | 8.0.25 | ORM |
-| Microsoft.EntityFrameworkCore.SqlServer | 8.0.25 | Proveedor SQL Server |
-| Microsoft.AspNetCore.Identity | 8.0.25 | Autenticación y autorización |
-| Microsoft.AspNetCore.Identity.UI | 8.0.25 | Páginas de Identity predeterminadas |
-| AutoMapper | 13.x | Mapeo entidades ↔ DTOs |
-| AutoMapper.Extensions.Microsoft.DependencyInjection | 13.x | Integración con DI |
-| FluentValidation | 11.x | Validación declarativa |
-| FluentValidation.AspNetCore | 11.x | Integración con ASP.NET Core |
-| MailKit | 4.x | Cliente SMTP |
-| MimeKit | 4.x | Construcción de mensajes email |
-| Tailwind CSS | 4.3.0 | Framework CSS utility-first |
-| @tailwindcss/cli | 4.x | CLI para compilación de CSS |
+| Librería                                            | Versión | Propósito                           |
+| --------------------------------------------------- | ------- | ----------------------------------- |
+| Microsoft.AspNetCore (SDK)                          | 8.0     | Framework web MVC                   |
+| Microsoft.EntityFrameworkCore                       | 8.0.25  | ORM                                 |
+| Microsoft.EntityFrameworkCore.SqlServer             | 8.0.25  | Proveedor SQL Server                |
+| Microsoft.AspNetCore.Identity                       | 8.0.25  | Autenticación y autorización        |
+| Microsoft.AspNetCore.Identity.UI                    | 8.0.25  | Páginas de Identity predeterminadas |
+| AutoMapper                                          | 13.x    | Mapeo entidades ↔ DTOs              |
+| AutoMapper.Extensions.Microsoft.DependencyInjection | 13.x    | Integración con DI                  |
+| FluentValidation                                    | 11.x    | Validación declarativa              |
+| FluentValidation.AspNetCore                         | 11.x    | Integración con ASP.NET Core        |
+| MailKit                                             | 4.x     | Cliente SMTP                        |
+| MimeKit                                             | 4.x     | Construcción de mensajes email      |
+| Tailwind CSS                                        | 4.3.0   | Framework CSS utility-first         |
+| @tailwindcss/cli                                    | 4.x     | CLI para compilación de CSS         |
 
 ---
 
@@ -836,7 +837,7 @@ Si se prefiere crear la base de datos manualmente:
 
 ## 19. Capturas de Pantalla
 
-*Nota: Las capturas del sistema en funcionamiento se pueden generar accediendo a:*
+_Nota: Las capturas del sistema en funcionamiento se pueden generar accediendo a:_
 
 - **Landing page**: http://localhost:5263
 - **Login**: http://localhost:5263/Identity/Account/Login
@@ -897,4 +898,4 @@ La arquitectura fue diseñada priorizando:
 
 ---
 
-*Documento generado como parte de la entrega de la prueba técnica para el cargo de Analista Desarrollador .NET — Fondo de Empleados XYZ.*
+_Documento generado como parte de la entrega de la prueba técnica para el cargo de Analista Desarrollador .NET — Fondo de Empleados XYZ._

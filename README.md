@@ -34,30 +34,30 @@ ReservasXYZ.Web             → Controllers MVC, Razor Views, Identity Pages, ww
 
 ### Flujo de dependencias
 
-| Capa | Depende de | Responsabilidad |
-|------|-----------|----------------|
-| **Domain** | — | Entidades de negocio, enums, contratos de repositorio |
-| **Application** | Domain | DTOs, lógica de aplicación, validación, AutoMapper |
-| **Infrastructure** | Domain, Application | EF Core, SQL Server, SMTP, Identity, Seed |
-| **Web** | Application, Infrastructure | MVC Controllers, Razor Views, DI |
+| Capa               | Depende de                  | Responsabilidad                                       |
+| ------------------ | --------------------------- | ----------------------------------------------------- |
+| **Domain**         | —                           | Entidades de negocio, enums, contratos de repositorio |
+| **Application**    | Domain                      | DTOs, lógica de aplicación, validación, AutoMapper    |
+| **Infrastructure** | Domain, Application         | EF Core, SQL Server, SMTP, Identity, Seed             |
+| **Web**            | Application, Infrastructure | MVC Controllers, Razor Views, DI                      |
 
 ---
 
 ## Stack tecnológico
 
-| Tecnología | Versión | Propósito |
-|-----------|---------|-----------|
-| .NET | 8.0 | Runtime y SDK |
-| ASP.NET Core MVC | 8.0 | Framework web |
-| Razor Views / Pages | 8.0 | Motor de vistas |
-| Entity Framework Core | 8.0 | ORM y migraciones |
-| SQL Server | 2019+ / LocalDB | Motor de base de datos |
-| ASP.NET Core Identity | 8.0 | Autenticación y autorización |
-| AutoMapper | 13.x | Mapeo entidades ↔ DTOs |
-| FluentValidation | 11.x | Validación de DTOs |
-| MailKit | 4.x | Envío SMTP |
-| Tailwind CSS | 4.3.0 | Framework CSS utility-first |
-| Node.js | 20+ | Build de CSS (Tailwind v4 requiere Node 20+) |
+| Tecnología            | Versión         | Propósito                                    |
+| --------------------- | --------------- | -------------------------------------------- |
+| .NET                  | 8.0             | Runtime y SDK                                |
+| ASP.NET Core MVC      | 8.0             | Framework web                                |
+| Razor Views / Pages   | 8.0             | Motor de vistas                              |
+| Entity Framework Core | 8.0             | ORM y migraciones                            |
+| SQL Server            | 2019+ / LocalDB | Motor de base de datos                       |
+| ASP.NET Core Identity | 8.0             | Autenticación y autorización                 |
+| AutoMapper            | 13.x            | Mapeo entidades ↔ DTOs                       |
+| FluentValidation      | 11.x            | Validación de DTOs                           |
+| MailKit               | 4.x             | Envío SMTP                                   |
+| Tailwind CSS          | 4.3.0           | Framework CSS utility-first                  |
+| Node.js               | 20+             | Build de CSS (Tailwind v4 requiere Node 20+) |
 
 ---
 
@@ -124,30 +124,30 @@ ReservasXYZ.sln
 
 ### Modelo relacional
 
-| Entidad | Descripción | Relaciones |
-|---------|-------------|------------|
-| **Site** | Sede recreativa o apartamento (8 sedes FODUN) | → Accommodations |
-| **Accommodation** | Bloque de alojamiento dentro de una sede | → Site, → Rooms |
-| **Room** | Habitación individual con tipo y capacidad | → Accommodation, → Rates, → ReservationDetails, → Favorites |
-| **Season** | Temporada con rango de fechas y multiplicador | → Rates |
-| **Rate** | Tarifa por habitación + temporada + tipo | → Room, → Season |
-| **Reservation** | Reserva del usuario con estado de flujo | → User, → ReservationDetails |
-| **ReservationDetail** | Línea de detalle por habitación reservada | → Reservation, → Room |
-| **ApplicationUser** | Usuario Identity extendido con nombre, apellido y documento | → Reservations, → Favorites |
-| **Favorite** | Relación usuario ↔ habitación favorita | → User, → Room |
+| Entidad               | Descripción                                                 | Relaciones                                                  |
+| --------------------- | ----------------------------------------------------------- | ----------------------------------------------------------- |
+| **Site**              | Sede recreativa o apartamento (8 sedes FODUN)               | → Accommodations                                            |
+| **Accommodation**     | Bloque de alojamiento dentro de una sede                    | → Site, → Rooms                                             |
+| **Room**              | Habitación individual con tipo y capacidad                  | → Accommodation, → Rates, → ReservationDetails, → Favorites |
+| **Season**            | Temporada con rango de fechas y multiplicador               | → Rates                                                     |
+| **Rate**              | Tarifa por habitación + temporada + tipo                    | → Room, → Season                                            |
+| **Reservation**       | Reserva del usuario con estado de flujo                     | → User, → ReservationDetails                                |
+| **ReservationDetail** | Línea de detalle por habitación reservada                   | → Reservation, → Room                                       |
+| **ApplicationUser**   | Usuario Identity extendido con nombre, apellido y documento | → Reservations, → Favorites                                 |
+| **Favorite**          | Relación usuario ↔ habitación favorita                      | → User, → Room                                              |
 
 ### Sedes FODUN (catálogo seed)
 
-| # | Sede | Ciudad |
-|---|------|--------|
-| 1 | Villeta | Villeta |
-| 2 | El Placer | Fusagasugá |
-| 3 | Gonzalo Morante | Chinchiná |
-| 4 | Tablones | Palmira |
-| 5 | Manguruma | Santa Fe de Antioquia |
-| 6 | Federmán | Bogotá |
-| 7 | Suramericana | Medellín |
-| 8 | El Rodadero | Santa Marta |
+| #   | Sede            | Ciudad                |
+| --- | --------------- | --------------------- |
+| 1   | Villeta         | Villeta               |
+| 2   | El Placer       | Fusagasugá            |
+| 3   | Gonzalo Morante | Chinchiná             |
+| 4   | Tablones        | Palmira               |
+| 5   | Manguruma       | Santa Fe de Antioquia |
+| 6   | Federmán        | Bogotá                |
+| 7   | Suramericana    | Medellín              |
+| 8   | El Rodadero     | Santa Marta           |
 
 ---
 
@@ -157,42 +157,42 @@ ReservasXYZ.sln
 
 Consulta habitaciones disponibles en un rango de fechas.
 
-| Parámetro | Tipo | Descripción |
-|-----------|------|-------------|
-| `@CheckIn` | `DATE` | Fecha de entrada |
-| `@CheckOut` | `DATE` | Fecha de salida |
-| **Retorno** | Tabla | Id, RoomNumber, Type, MaxGuests, BasePrice, AccommodationName, SiteName |
+| Parámetro   | Tipo   | Descripción                                                             |
+| ----------- | ------ | ----------------------------------------------------------------------- |
+| `@CheckIn`  | `DATE` | Fecha de entrada                                                        |
+| `@CheckOut` | `DATE` | Fecha de salida                                                         |
+| **Retorno** | Tabla  | Id, RoomNumber, Type, MaxGuests, BasePrice, AccommodationName, SiteName |
 
 ### `sp_GetAvailableRoomsByDatesAndGuests`
 
 Igual que el anterior, filtrando por capacidad mínima de huéspedes.
 
-| Parámetro | Tipo | Descripción |
-|-----------|------|-------------|
-| `@CheckIn` | `DATE` | Fecha de entrada |
-| `@CheckOut` | `DATE` | Fecha de salida |
-| `@Guests` | `INT` | Número de huéspedes |
+| Parámetro   | Tipo   | Descripción         |
+| ----------- | ------ | ------------------- |
+| `@CheckIn`  | `DATE` | Fecha de entrada    |
+| `@CheckOut` | `DATE` | Fecha de salida     |
+| `@Guests`   | `INT`  | Número de huéspedes |
 
 ### `sp_GetRoomRates`
 
 Retorna las tarifas configuradas para una habitación.
 
-| Parámetro | Tipo | Descripción |
-|-----------|------|-------------|
-| `@RoomId` | `INT` | ID de la habitación |
+| Parámetro   | Tipo  | Descripción                                                            |
+| ----------- | ----- | ---------------------------------------------------------------------- |
+| `@RoomId`   | `INT` | ID de la habitación                                                    |
 | **Retorno** | Tabla | RateId, PricePerNight, SeasonName, StartDate, EndDate, PriceMultiplier |
 
 ### `sp_CalculateTotalRate`
 
 Motor de tarificación FODUN. Calcula el precio total iterando día por día.
 
-| Parámetro | Tipo | Descripción |
-|-----------|------|-------------|
-| `@RoomId` | `INT` | ID de la habitación |
-| `@CheckIn` | `DATE` | Fecha de entrada |
-| `@CheckOut` | `DATE` | Fecha de salida |
-| `@TotalGuests` | `INT` | Número de huéspedes |
-| `@TotalRate` | `DECIMAL OUTPUT` | Tarifa total calculada |
+| Parámetro      | Tipo             | Descripción            |
+| -------------- | ---------------- | ---------------------- |
+| `@RoomId`      | `INT`            | ID de la habitación    |
+| `@CheckIn`     | `DATE`           | Fecha de entrada       |
+| `@CheckOut`    | `DATE`           | Fecha de salida        |
+| `@TotalGuests` | `INT`            | Número de huéspedes    |
+| `@TotalRate`   | `DECIMAL OUTPUT` | Tarifa total calculada |
 
 **Reglas de negocio:**
 
@@ -207,26 +207,26 @@ Motor de tarificación FODUN. Calcula el precio total iterando día por día.
 
 Verifica si una habitación tiene reservas solapadas (excluyendo canceladas).
 
-| Parámetro | Tipo | Descripción |
-|-----------|------|-------------|
-| `@RoomId` | `INT` | ID de la habitación |
-| `@CheckIn` | `DATE` | Fecha de entrada |
-| `@CheckOut` | `DATE` | Fecha de salida |
-| `@ExcludeReservationId` | `INT` | ID a excluir (para edición) |
-| `@IsOverbooked` | `BIT OUTPUT` | `1` si hay solapamiento |
+| Parámetro               | Tipo         | Descripción                 |
+| ----------------------- | ------------ | --------------------------- |
+| `@RoomId`               | `INT`        | ID de la habitación         |
+| `@CheckIn`              | `DATE`       | Fecha de entrada            |
+| `@CheckOut`             | `DATE`       | Fecha de salida             |
+| `@ExcludeReservationId` | `INT`        | ID a excluir (para edición) |
+| `@IsOverbooked`         | `BIT OUTPUT` | `1` si hay solapamiento     |
 
 ### `sp_GetRatesByCriteria`
 
 Consulta tarifas cruzando sede, temporada, alojamiento y número de personas.
 
-| Parámetro | Tipo | Descripción |
-|-----------|------|-------------|
-| `@SiteId` | `INT NULL` | Filtro por sede |
-| `@AccommodationId` | `INT NULL` | Filtro por alojamiento |
-| `@SeasonId` | `INT NULL` | Filtro por temporada |
-| `@Guests` | `INT NULL` | Número de huéspedes |
-| `@CheckIn` | `DATE NULL` | Fecha de entrada |
-| `@CheckOut` | `DATE NULL` | Fecha de salida |
+| Parámetro          | Tipo        | Descripción            |
+| ------------------ | ----------- | ---------------------- |
+| `@SiteId`          | `INT NULL`  | Filtro por sede        |
+| `@AccommodationId` | `INT NULL`  | Filtro por alojamiento |
+| `@SeasonId`        | `INT NULL`  | Filtro por temporada   |
+| `@Guests`          | `INT NULL`  | Número de huéspedes    |
+| `@CheckIn`         | `DATE NULL` | Fecha de entrada       |
+| `@CheckOut`        | `DATE NULL` | Fecha de salida        |
 
 ---
 
@@ -234,12 +234,12 @@ Consulta tarifas cruzando sede, temporada, alojamiento y número de personas.
 
 ### Requisitos previos
 
-| Requisito | Versión mínima |
-|-----------|---------------|
-| .NET SDK | 8.0 |
+| Requisito  | Versión mínima  |
+| ---------- | --------------- |
+| .NET SDK   | 8.0             |
 | SQL Server | 2019+ o LocalDB |
-| Node.js | 20+ |
-| npm | 9+ |
+| Node.js    | 20+             |
+| npm        | 9+              |
 
 ### Variables de configuración (`appsettings.json`)
 
@@ -306,11 +306,11 @@ La base de datos se crea y migra automáticamente al iniciar la aplicación. El 
 
 ### Credenciales de desarrollo
 
-| Campo | Valor |
-|-------|-------|
-| Email | `admin@hotel.com` |
-| Contraseña | `Admin123!` |
-| Rol | `Admin` |
+| Campo      | Valor             |
+| ---------- | ----------------- |
+| Email      | `admin@hotel.com` |
+| Contraseña | `Admin123!`       |
+| Rol        | `Admin`           |
 
 ---
 
@@ -347,37 +347,37 @@ La base de datos se crea y migra automáticamente al iniciar la aplicación. El 
 
 ## Seguridad
 
-| Control | Implementación |
-|---------|---------------|
-| **Autenticación** | ASP.NET Core Identity con cookies |
-| **Autorización** | Roles (`Admin`, `Receptionist`, `Guest`) con `[Authorize]` |
-| **Confirmación de email** | Obligatoria antes de iniciar sesión |
-| **Bloqueo de cuenta** | 5 intentos fallidos → 15 minutos de bloqueo |
-| **Contraseña** | Mínimo 8 caracteres, mayúscula, minúscula, dígito, carácter especial |
-| **CSRF** | `[ValidateAntiForgeryToken]` en todos los POST |
-| **Overposting** | DTOs específicos para Create/Update (sin exponer campos internos) |
-| **Overbooking** | SP `sp_ValidateOverbooking` + transacción `SERIALIZABLE` |
-| **XSS** | Razor escapa automáticamente; `HtmlEncoder` en enlaces de email |
-| **SQL Injection** | EF Core parametrizado + SPs con parámetros tipados |
-| **Mensajes genéricos** | Login no revela si el email existe o no |
-| **Identity errors** | `SpanishIdentityErrorDescriber` para mensajes en español |
+| Control                   | Implementación                                                       |
+| ------------------------- | -------------------------------------------------------------------- |
+| **Autenticación**         | ASP.NET Core Identity con cookies                                    |
+| **Autorización**          | Roles (`Admin`, `Receptionist`, `Guest`) con `[Authorize]`           |
+| **Confirmación de email** | Obligatoria antes de iniciar sesión                                  |
+| **Bloqueo de cuenta**     | 5 intentos fallidos → 15 minutos de bloqueo                          |
+| **Contraseña**            | Mínimo 8 caracteres, mayúscula, minúscula, dígito, carácter especial |
+| **CSRF**                  | `[ValidateAntiForgeryToken]` en todos los POST                       |
+| **Overposting**           | DTOs específicos para Create/Update (sin exponer campos internos)    |
+| **Overbooking**           | SP `sp_ValidateOverbooking` + transacción `SERIALIZABLE`             |
+| **XSS**                   | Razor escapa automáticamente; `HtmlEncoder` en enlaces de email      |
+| **SQL Injection**         | EF Core parametrizado + SPs con parámetros tipados                   |
+| **Mensajes genéricos**    | Login no revela si el email existe o no                              |
+| **Identity errors**       | `SpanishIdentityErrorDescriber` para mensajes en español             |
 
 ---
 
 ## Decisiones técnicas
 
-| Decisión | Justificación |
-|----------|---------------|
-| **Clean Architecture en 4 capas** | Separación clara de responsabilidades. Domain sin dependencias externas. |
-| **Stored Procedures + EF Core** | Requisito FODUN para consultas de disponibilidad y tarificación. SP para lógica compleja día por día; EF Core para CRUD simple. |
-| **FluentValidation** | Validación declarativa en capa Application, independiente del framework web. Mensajes en español configurados globalmente. |
-| **AutoMapper** | Mapeo automático entre entidades y DTOs, reduce boilerplate. |
-| **Transacción SERIALIZABLE** | Previene race conditions en reservas concurrentes sobre la misma habitación. |
-| **Soft delete** | `IsActive = false` en lugar de eliminar registros, preservando integridad referencial. |
-| **CultureInfo es-CO** | Formato de moneda, fechas y validación en español colombiano. |
-| **Tailwind CSS v4** | Compilación local, sin CDN. Clases utilitarias para UI responsiva. |
-| **Fallback LINQ en repositorios** | Si un SP falla o no existe, el repositorio ejecuta la lógica equivalente con LINQ. |
-| **Propiedades en inglés / UI en español** | Convención .NET estándar: código fuente en inglés, toda la interfaz de usuario y mensajes visibles en español. |
+| Decisión                                  | Justificación                                                                                                                   |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| **Clean Architecture en 4 capas**         | Separación clara de responsabilidades. Domain sin dependencias externas.                                                        |
+| **Stored Procedures + EF Core**           | Requisito FODUN para consultas de disponibilidad y tarificación. SP para lógica compleja día por día; EF Core para CRUD simple. |
+| **FluentValidation**                      | Validación declarativa en capa Application, independiente del framework web. Mensajes en español configurados globalmente.      |
+| **AutoMapper**                            | Mapeo automático entre entidades y DTOs, reduce boilerplate.                                                                    |
+| **Transacción SERIALIZABLE**              | Previene race conditions en reservas concurrentes sobre la misma habitación.                                                    |
+| **Soft delete**                           | `IsActive = false` en lugar de eliminar registros, preservando integridad referencial.                                          |
+| **CultureInfo es-CO**                     | Formato de moneda, fechas y validación en español colombiano.                                                                   |
+| **Tailwind CSS v4**                       | Compilación local, sin CDN. Clases utilitarias para UI responsiva.                                                              |
+| **Fallback LINQ en repositorios**         | Si un SP falla o no existe, el repositorio ejecuta la lógica equivalente con LINQ.                                              |
+| **Propiedades en inglés / UI en español** | Convención .NET estándar: código fuente en inglés, toda la interfaz de usuario y mensajes visibles en español.                  |
 
 ---
 
@@ -400,12 +400,12 @@ El proyecto incluye soporte completo para despliegue con Docker Compose.
 
 ### Arquitectura de contenedores
 
-| Servicio | Imagen | Puerto | Propósito |
-|----------|--------|--------|-----------|
-| `sqlserver` | `mcr.microsoft.com/mssql/server:2022-latest` | 1433 | Base de datos SQL Server 2022 Express |
-| `web` | Build multi-stage (SDK 8.0 → Runtime 8.0) | 5000 | Aplicación ASP.NET Core |
-| `nginx` | `nginx:alpine` | 80, 443 | Reverse proxy + SSL termination |
-| `certbot` | `certbot/certbot` | — | Renovación automática de certificados SSL |
+| Servicio    | Imagen                                       | Puerto  | Propósito                                 |
+| ----------- | -------------------------------------------- | ------- | ----------------------------------------- |
+| `sqlserver` | `mcr.microsoft.com/mssql/server:2022-latest` | 1433    | Base de datos SQL Server 2022 Express     |
+| `web`       | Build multi-stage (SDK 8.0 → Runtime 8.0)    | 5000    | Aplicación ASP.NET Core                   |
+| `nginx`     | `nginx:alpine`                               | 80, 443 | Reverse proxy + SSL termination           |
+| `certbot`   | `certbot/certbot`                            | —       | Renovación automática de certificados SSL |
 
 ### Requisitos
 
@@ -457,16 +457,16 @@ El sistema está desplegado en un VPS de Google Cloud Platform.
 
 ### Infraestructura
 
-| Componente | Detalle |
-|-----------|---------|
-| **Proveedor** | Google Cloud Platform (GCE) |
-| **Instancia** | e2-medium (2 vCPU, 4 GB RAM, 40 GB SSD) |
-| **SO** | Ubuntu 22.04 LTS |
-| **Runtime** | Docker + Docker Compose |
-| **Reverse Proxy** | Nginx (Alpine) en contenedor |
-| **SSL** | Let's Encrypt via Certbot (renovación automática cada 6h) |
-| **DNS** | Hostinger (registro A apuntando a IP estática GCP) |
-| **URL** | https://reservas-xyz.app-dev.icu |
+| Componente        | Detalle                                                   |
+| ----------------- | --------------------------------------------------------- |
+| **Proveedor**     | Google Cloud Platform (GCE)                               |
+| **Instancia**     | e2-medium (2 vCPU, 4 GB RAM, 40 GB SSD)                   |
+| **SO**            | Ubuntu 22.04 LTS                                          |
+| **Runtime**       | Docker + Docker Compose                                   |
+| **Reverse Proxy** | Nginx (Alpine) en contenedor                              |
+| **SSL**           | Let's Encrypt via Certbot (renovación automática cada 6h) |
+| **DNS**           | Hostinger (registro A apuntando a IP estática GCP)        |
+| **URL**           | https://reservas-xyz.app-dev.icu                          |
 
 ### Seguridad del VPS
 
@@ -490,27 +490,27 @@ El sistema está desplegado en un VPS de Google Cloud Platform.
 
 ### Administrador
 
-| Campo | Valor |
-|-------|-------|
-| **Email** | `admin@hotel.com` |
-| **Contraseña** | `Admin123!` |
-| **Rol** | Admin |
+| Campo          | Valor             |
+| -------------- | ----------------- |
+| **Email**      | `admin@hotel.com` |
+| **Contraseña** | `Admin123!`       |
+| **Rol**        | Admin             |
 
 ### Administrador (test)
 
-| Campo | Valor |
-|-------|-------|
-| **Email** | `admin@test.com` |
-| **Contraseña** | `Admin123*` |
-| **Rol** | Admin |
+| Campo          | Valor            |
+| -------------- | ---------------- |
+| **Email**      | `admin@test.com` |
+| **Contraseña** | `Admin123*`      |
+| **Rol**        | Admin            |
 
 ### Cliente (test)
 
-| Campo | Valor |
-|-------|-------|
-| **Email** | `cliente@test.com` |
-| **Contraseña** | `Cliente123*` |
-| **Rol** | Cliente |
+| Campo          | Valor              |
+| -------------- | ------------------ |
+| **Email**      | `cliente@test.com` |
+| **Contraseña** | `Cliente123*`      |
+| **Rol**        | Cliente            |
 
 ### Crear un nuevo usuario
 
@@ -556,17 +556,17 @@ El sistema está desplegado en un VPS de Google Cloud Platform.
 
 ## Troubleshooting
 
-| Problema | Solución |
-|----------|---------|
-| Error de conexión a BD | Verificar `ConnectionStrings:DefaultConnection` en `appsettings.json`. Confirmar que SQL Server/LocalDB está corriendo. |
-| No se envían emails | Configurar `EmailSettings` con credenciales SMTP válidas. Para Gmail usar contraseña de aplicación. |
-| CSS no se actualiza | Ejecutar `npm run css:build` en `ReservasXYZ.Web/`. Ctrl+F5 en el navegador. |
-| Error de migración | Ejecutar `dotnet ef database update --project ReservasXYZ.Infrastructure --startup-project ReservasXYZ.Web`. |
-| Seed no se ejecuta | Verificar que la BD es accesible al inicio. Revisar logs en consola. |
-| Puerto 5263 ocupado | Detener procesos: `Get-NetTCPConnection -LocalPort 5263` y `Stop-Process -Id <PID>`. |
-| Docker build falla con Node | Verificar que el Dockerfile usa NodeSource setup_20.x (Tailwind v4 requiere Node 20+). |
-| SQL Server no arranca en Docker | Verificar que `SA_PASSWORD` cumple requisitos de complejidad. El healthcheck espera hasta 60s. |
-| Certbot falla | Verificar que el dominio DNS apunta correctamente a la IP del VPS. Puerto 80 debe estar abierto. |
+| Problema                        | Solución                                                                                                                |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Error de conexión a BD          | Verificar `ConnectionStrings:DefaultConnection` en `appsettings.json`. Confirmar que SQL Server/LocalDB está corriendo. |
+| No se envían emails             | Configurar `EmailSettings` con credenciales SMTP válidas. Para Gmail usar contraseña de aplicación.                     |
+| CSS no se actualiza             | Ejecutar `npm run css:build` en `ReservasXYZ.Web/`. Ctrl+F5 en el navegador.                                            |
+| Error de migración              | Ejecutar `dotnet ef database update --project ReservasXYZ.Infrastructure --startup-project ReservasXYZ.Web`.            |
+| Seed no se ejecuta              | Verificar que la BD es accesible al inicio. Revisar logs en consola.                                                    |
+| Puerto 5263 ocupado             | Detener procesos: `Get-NetTCPConnection -LocalPort 5263` y `Stop-Process -Id <PID>`.                                    |
+| Docker build falla con Node     | Verificar que el Dockerfile usa NodeSource setup_20.x (Tailwind v4 requiere Node 20+).                                  |
+| SQL Server no arranca en Docker | Verificar que `SA_PASSWORD` cumple requisitos de complejidad. El healthcheck espera hasta 60s.                          |
+| Certbot falla                   | Verificar que el dominio DNS apunta correctamente a la IP del VPS. Puerto 80 debe estar abierto.                        |
 
 ---
 
@@ -581,15 +581,15 @@ El sistema está desplegado en un VPS de Google Cloud Platform.
 
 ## Entrega
 
-| Entregable | Archivo |
-|-----------|---------|
-| Proyecto completo | `ReservasXYZ.zip` (solución .NET + Docker) |
-| Script de BD | `database/Database.sql` |
-| Datos de catálogo | `database/SeedCatalog.sql` |
-| Stored Procedures | `ReservasXYZ.Infrastructure/StoredProcedures/StoredProcedures.sql` |
-| Documento técnico | `DOCUMENTO_TECNICO.md` |
-| Variables de entorno | `.env.example` |
-| Docker | `Dockerfile` + `docker-compose.yml` |
+| Entregable           | Archivo                                                            |
+| -------------------- | ------------------------------------------------------------------ |
+| Proyecto completo    | `ReservasXYZ.zip` (solución .NET + Docker)                         |
+| Script de BD         | `database/Database.sql`                                            |
+| Datos de catálogo    | `database/SeedCatalog.sql`                                         |
+| Stored Procedures    | `ReservasXYZ.Infrastructure/StoredProcedures/StoredProcedures.sql` |
+| Documento técnico    | `DOCUMENTO_TECNICO.md`                                             |
+| Variables de entorno | `.env.example`                                                     |
+| Docker               | `Dockerfile` + `docker-compose.yml`                                |
 
 ---
 
