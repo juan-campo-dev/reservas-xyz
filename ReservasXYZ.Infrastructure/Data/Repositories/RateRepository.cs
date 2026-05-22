@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Data.SqlClient;
 using ReservasXYZ.Domain.Entities;
 using ReservasXYZ.Domain.Interfaces;
@@ -123,6 +124,10 @@ public class RateRepository : Repository<Rate>, IRateRepository
         await using var command = connection.CreateCommand();
         command.CommandText = "sp_CalculateTotalRate";
         command.CommandType = System.Data.CommandType.StoredProcedure;
+
+        var currentTransaction = _context.Database.CurrentTransaction;
+        if (currentTransaction is not null)
+            command.Transaction = currentTransaction.GetDbTransaction();
         command.Parameters.Add(new SqlParameter("@RoomId", roomId));
         command.Parameters.Add(new SqlParameter("@CheckIn", checkIn.Date));
         command.Parameters.Add(new SqlParameter("@CheckOut", checkOut.Date));

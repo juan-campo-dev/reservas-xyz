@@ -224,9 +224,20 @@ Al iniciar sesión, el asociado accede automáticamente al portal personalizado.
 - Listado de las 8 sedes recreativas disponibles con capacidad.
 - Sus últimas 3 reservas activas (si las tiene).
 
-![Portal del asociado](docs/screenshots/01-home.png)
+<div class="fig">
+<img src="docs/screenshots/guest-01-login.png" alt="Inicio de sesión">
+<p class="fig-caption">Figura 1. Pantalla de inicio de sesión con campos de email y contraseña.</p>
+</div>
 
-*Figura 1. Portal del asociado con formulario de búsqueda de disponibilidad y sedes recreativas.*
+<div class="fig">
+<img src="docs/screenshots/guest-02-portal.png" alt="Portal del asociado">
+<p class="fig-caption">Figura 2. Portal del asociado con saludo personalizado y formulario de búsqueda.</p>
+</div>
+
+<div class="fig">
+<img src="docs/screenshots/guest-03-sedes.png" alt="Sedes recreativas">
+<p class="fig-caption">Figura 3. Listado de sedes recreativas con información de capacidad y ubicación.</p>
+</div>
 
 ---
 
@@ -234,14 +245,14 @@ Al iniciar sesión, el asociado accede automáticamente al portal personalizado.
 
 El asociado completa el formulario de búsqueda con:
 
-| Campo | Descripción | Requerido |
-|-------|-------------|-----------|
-| Sede | Seleccionar una sede específica o "Todas las sedes" | Opcional |
-| Fecha de entrada | Fecha de check-in (mínimo: hoy) | Sí |
-| Fecha de salida | Fecha de check-out (posterior a check-in) | Sí |
-| Huéspedes | Número de personas (mínimo: 1) | Sí |
+| Campo            | Descripción                                         | Requerido |
+| ---------------- | --------------------------------------------------- | --------- |
+| Sede             | Seleccionar una sede específica o "Todas las sedes" | Opcional  |
+| Fecha de entrada | Fecha de check-in (mínimo: hoy)                     | Sí        |
+| Fecha de salida  | Fecha de check-out (posterior a check-in)           | Sí        |
+| Huéspedes        | Número de personas (mínimo: 1)                      | Sí        |
 
-*Tabla 1. Campos del formulario de búsqueda de disponibilidad.*
+_Tabla 1. Campos del formulario de búsqueda de disponibilidad._
 
 **Funcionamiento técnico:**
 
@@ -259,6 +270,11 @@ El asociado completa el formulario de búsqueda con:
 - Solo usuarios autenticados (`[Authorize]`).
 - Administradores no pueden acceder a este flujo (`return Forbid()`).
 
+<div class="fig">
+<img src="docs/screenshots/guest-04-busqueda-form.png" alt="Formulario de búsqueda">
+<p class="fig-caption">Figura 4. Formulario de búsqueda con selección de sede, rango de fechas y número de huéspedes.</p>
+</div>
+
 <div class="pb"></div>
 
 ## Paso 2 — Resultados de disponibilidad
@@ -271,23 +287,29 @@ Los resultados se presentan agrupados por sede. Para cada sede se muestra:
 
 Para cada habitación disponible:
 
-| Dato | Ejemplo |
-|------|---------|
-| Número de habitación | V01, M-N03, 202 |
-| Tipo | Familiar, Cabaña, Apartamento |
-| Capacidad máxima | 4, 6, 8 personas |
-| Alojamiento | Habitaciones Villeta, Bloque Nuevo |
-| Tarifa base por noche | $70.000, $90.000 |
-| Tarifa total de la estadía | Calculada por SP4 |
-| Personas incluidas en tarifa base | 4 personas |
-| Costo persona adicional/noche | $16.000, $11.000 |
-| Etiqueta de ajuste | "Mejor opción" o "Solo grupo" |
+| Dato                              | Ejemplo                            |
+| --------------------------------- | ---------------------------------- |
+| Número de habitación              | V01, M-N03, 202                    |
+| Tipo                              | Familiar, Cabaña, Apartamento      |
+| Capacidad máxima                  | 4, 6, 8 personas                   |
+| Alojamiento                       | Habitaciones Villeta, Bloque Nuevo |
+| Tarifa base por noche             | $70.000, $90.000                   |
+| Tarifa total de la estadía        | Calculada por SP4                  |
+| Personas incluidas en tarifa base | 4 personas                         |
+| Costo persona adicional/noche     | $16.000, $11.000                   |
+| Etiqueta de ajuste                | "Mejor opción" o "Solo grupo"      |
 
-*Tabla 2. Información mostrada por cada habitación disponible.*
+_Tabla 2. Información mostrada por cada habitación disponible._
 
-![Resultados de disponibilidad](docs/screenshots/11-availability-search.png)
+<div class="fig">
+<img src="docs/screenshots/guest-05-resultados.png" alt="Resultados de disponibilidad">
+<p class="fig-caption">Figura 5. Resultados de búsqueda agrupados por sede con habitaciones disponibles y precios calculados.</p>
+</div>
 
-*Figura 2. Resultados de búsqueda con habitaciones disponibles, precios calculados por SP y botones de favoritos.*
+<div class="fig">
+<img src="docs/screenshots/guest-06-habitaciones.png" alt="Tarjetas de habitaciones">
+<p class="fig-caption">Figura 6. Detalle de tarjetas de habitación con tipo, capacidad, tarifa por noche, botón de favorito y acciones.</p>
+</div>
 
 **Vistas disponibles:** El asociado puede alternar entre vista de **Tabla** y vista de **Lista** con el toggle en la barra lateral.
 
@@ -328,14 +350,19 @@ Si hay múltiples habitaciones, aparece el botón **"Reservar toda la sede"** qu
 
 El botón **"Sugerir grupo"** selecciona automáticamente la combinación óptima de habitaciones (ordenadas por capacidad descendente y precio ascendente) hasta cubrir los huéspedes solicitados.
 
-| Modo de selección | Cuándo aparece | Acción |
-|-------------------|----------------|--------|
-| Reserva individual | Habitación cubre capacidad | Botón "Reservar" por habitación |
-| Armar reserva grande | ≥ 2 habitaciones en sede | Checkboxes + medidor |
-| Sugerir grupo | ≥ 2 habitaciones, grupo > 1 | Auto-selecciona combinación |
-| Reservar toda la sede | ≥ 2 habitaciones | Pre-selecciona todas |
+| Modo de selección     | Cuándo aparece              | Acción                          |
+| --------------------- | --------------------------- | ------------------------------- |
+| Reserva individual    | Habitación cubre capacidad  | Botón "Reservar" por habitación |
+| Armar reserva grande  | ≥ 2 habitaciones en sede    | Checkboxes + medidor            |
+| Sugerir grupo         | ≥ 2 habitaciones, grupo > 1 | Auto-selecciona combinación     |
+| Reservar toda la sede | ≥ 2 habitaciones            | Pre-selecciona todas            |
 
-*Tabla 3. Modos de selección de habitaciones.*
+_Tabla 3. Modos de selección de habitaciones._
+
+<div class="fig">
+<img src="docs/screenshots/guest-08-seleccion-grupal.png" alt="Selección grupal">
+<p class="fig-caption">Figura 8. Modo de selección grupal con checkboxes activos y medidor de capacidad en tiempo real.</p>
+</div>
 
 <div class="pb"></div>
 
@@ -353,16 +380,21 @@ El asociado puede marcar habitaciones como favoritas haciendo clic en el **ícon
 
 **Persistencia:** Los favoritos se guardan en la tabla `Favorites` con índice único `(UserId, RoomId)` para evitar duplicados. Son visibles cada vez que el asociado busca disponibilidad.
 
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| `Id` | INT | PK auto-incremento |
-| `UserId` | NVARCHAR | FK → AspNetUsers |
-| `RoomId` | INT | FK → Rooms |
-| `CreatedAt` | DATETIME | Fecha UTC |
+| Campo       | Tipo     | Descripción        |
+| ----------- | -------- | ------------------ |
+| `Id`        | INT      | PK auto-incremento |
+| `UserId`    | NVARCHAR | FK → AspNetUsers   |
+| `RoomId`    | INT      | FK → Rooms         |
+| `CreatedAt` | DATETIME | Fecha UTC          |
 
-*Tabla 4. Estructura de la tabla Favorites.*
+_Tabla 4. Estructura de la tabla Favorites._
 
 **Seguridad:** Solo usuarios autenticados (`[Authorize]`). Anti-forgery token obligatorio. Verificación de que la habitación existe y está activa.
+
+<div class="fig">
+<img src="docs/screenshots/guest-07-favorito.png" alt="Marcar favorito">
+<p class="fig-caption">Figura 7. Habitación marcada como favorita (corazón relleno) con feedback visual inmediato.</p>
+</div>
 
 <div class="pb"></div>
 
@@ -381,14 +413,14 @@ Al seleccionar habitación(es), el asociado es redirigido a la pantalla de confi
 
 ### Datos solicitados al asociado
 
-| Campo | Descripción |
-|-------|-------------|
+| Campo              | Descripción                 |
+| ------------------ | --------------------------- |
 | Nombre del huésped | Nombre completo del titular |
-| Email | Para envío de confirmación |
-| Teléfono | Contacto (opcional) |
-| Notas | Observaciones especiales |
+| Email              | Para envío de confirmación  |
+| Teléfono           | Contacto (opcional)         |
+| Notas              | Observaciones especiales    |
 
-*Tabla 5. Datos requeridos para crear la reserva.*
+_Tabla 5. Datos requeridos para crear la reserva._
 
 ### Proceso de creación (backend)
 
@@ -408,30 +440,46 @@ Al seleccionar habitación(es), el asociado es redirigido a la pantalla de confi
 
 **Prevención de overbooking:** La transacción `SERIALIZABLE` bloquea las filas de habitaciones durante toda la verificación y creación, impidiendo que dos usuarios reserven la misma habitación simultáneamente.
 
+<div class="fig">
+<img src="docs/screenshots/guest-09-crear-reserva.png" alt="Pantalla de confirmación">
+<p class="fig-caption">Figura 9. Pantalla de confirmación con resumen de habitación, fechas, desglose de tarifa y formulario de datos.</p>
+</div>
+
+<div class="fig">
+<img src="docs/screenshots/guest-10-formulario-reserva.png" alt="Formulario completo">
+<p class="fig-caption">Figura 10. Formulario de reserva completado con nombre, email y teléfono del huésped.</p>
+</div>
+
+<div class="fig">
+<img src="docs/screenshots/guest-11-reserva-creada.png" alt="Reserva creada">
+<p class="fig-caption">Figura 11. Reserva #4 creada exitosamente — 1 habitación, 2 huéspedes, $270.000, estado Pendiente.</p>
+</div>
+
 <div class="pb"></div>
 
 ## Paso 6 — Mis reservas
 
 El asociado puede consultar su historial de reservas desde el portal. Se muestran las últimas 10 reservas ordenadas por fecha de check-in descendente.
 
-![Mis reservas](docs/screenshots/15-my-reservations.png)
-
-*Figura 3. Historial de reservas del asociado con estado, fechas y total.*
+<div class="fig">
+<img src="docs/screenshots/guest-13-mis-reservas.png" alt="Mis reservas">
+<p class="fig-caption">Figura 12. Sección "Mis reservas" en el portal del asociado con historial de estadías.</p>
+</div>
 
 ### Información por reserva
 
-| Dato | Descripción |
-|------|-------------|
-| # Reserva | ID único |
-| Sede | Nombre de la sede |
-| Habitación(es) | Números de habitación |
-| Check-in / Check-out | Fechas de la estadía |
-| Huéspedes | Número de personas |
-| Total | Monto calculado por SPs |
-| Estado | Pending, Confirmed, CheckedIn, CheckedOut, Cancelled, NoShow |
-| Acciones | Ver detalles, Cancelar (si Pending) |
+| Dato                 | Descripción                                                  |
+| -------------------- | ------------------------------------------------------------ |
+| # Reserva            | ID único                                                     |
+| Sede                 | Nombre de la sede                                            |
+| Habitación(es)       | Números de habitación                                        |
+| Check-in / Check-out | Fechas de la estadía                                         |
+| Huéspedes            | Número de personas                                           |
+| Total                | Monto calculado por SPs                                      |
+| Estado               | Pending, Confirmed, CheckedIn, CheckedOut, Cancelled, NoShow |
+| Acciones             | Ver detalles, Cancelar (si Pending)                          |
 
-*Tabla 6. Datos mostrados en el historial de reservas del asociado.*
+_Tabla 6. Datos mostrados en el historial de reservas del asociado._
 
 ### Estados de la reserva (ciclo de vida)
 
@@ -442,16 +490,16 @@ El asociado puede consultar su historial de reservas desde el portal. Se muestra
   Cancelled      NoShow
 ```
 
-| Estado | Quién lo cambia | Descripción |
-|--------|----------------|-------------|
-| Pending | Sistema | Estado inicial al crear la reserva |
-| Confirmed | Admin | Reserva verificada y confirmada |
-| CheckedIn | Admin | Huésped se registró en la sede |
-| CheckedOut | Admin | Huésped finalizó su estadía |
-| Cancelled | Asociado o Admin | Reserva cancelada |
-| NoShow | Admin | Huésped no se presentó |
+| Estado     | Quién lo cambia  | Descripción                        |
+| ---------- | ---------------- | ---------------------------------- |
+| Pending    | Sistema          | Estado inicial al crear la reserva |
+| Confirmed  | Admin            | Reserva verificada y confirmada    |
+| CheckedIn  | Admin            | Huésped se registró en la sede     |
+| CheckedOut | Admin            | Huésped finalizó su estadía        |
+| Cancelled  | Asociado o Admin | Reserva cancelada                  |
+| NoShow     | Admin            | Huésped no se presentó             |
 
-*Tabla 7. Estados de reserva y responsables del cambio.*
+_Tabla 7. Estados de reserva y responsables del cambio._
 
 <div class="pb"></div>
 
@@ -471,14 +519,19 @@ El asociado puede cancelar sus reservas **solo si están en estado Pending**.
 
 **Restricciones por rol:**
 
-| Rol | Puede cancelar | Restricción de estado |
-|-----|---------------|----------------------|
-| Guest/Cliente | Solo sus propias reservas | Solo si es Pending |
-| Admin | Cualquier reserva | Sin restricción de estado |
+| Rol           | Puede cancelar            | Restricción de estado     |
+| ------------- | ------------------------- | ------------------------- |
+| Guest/Cliente | Solo sus propias reservas | Solo si es Pending        |
+| Admin         | Cualquier reserva         | Sin restricción de estado |
 
-*Tabla 8. Permisos de cancelación por rol.*
+_Tabla 8. Permisos de cancelación por rol._
 
 **Nota:** Una vez la reserva pasa a `Confirmed`, `CheckedIn` o `CheckedOut`, el asociado no puede cancelarla. Solo un administrador puede hacerlo.
+
+<div class="fig">
+<img src="docs/screenshots/guest-12-reserva-cancelada.png" alt="Reserva cancelada">
+<p class="fig-caption">Figura 13. Reserva cancelada — estado cambia a "Cancelada" y desaparece el botón de cancelar.</p>
+</div>
 
 ---
 
@@ -494,9 +547,16 @@ Si el asociado olvida su contraseña:
 6. Asociado recibe enlace → formulario de nueva contraseña.
 7. Token se valida y contraseña se actualiza.
 
-![Recuperar contraseña](docs/screenshots/16-forgot-password.png)
-
-*Figura 4. Formulario de recuperación de contraseña vía email SMTP.*
+<div class="fig-row">
+<div class="fig">
+<img src="docs/screenshots/guest-14-forgot-password.png" alt="Recuperar contraseña">
+<p class="fig-caption">Figura 14. Formulario de recuperación de contraseña vía email SMTP.</p>
+</div>
+<div class="fig">
+<img src="docs/screenshots/guest-15-registro.png" alt="Registro de nuevo asociado">
+<p class="fig-caption">Figura 15. Formulario de registro de nuevo asociado con datos personales.</p>
+</div>
+</div>
 
 <div class="pb"></div>
 
@@ -552,16 +612,16 @@ Asociado (Guest/Cliente)
   └─► CERRAR SESIÓN
 ```
 
-| Paso | Acción | Endpoint | SP utilizado |
-|------|--------|----------|-------------|
-| 1 | Buscar disponibilidad | `POST /Home/SearchAvailability` | SP1, SP2, SP4 |
-| 2 | Ver resultados | Partial view AJAX | — |
-| 3 | Marcar favorito | `POST /Favorites/ToggleRoom` | — |
-| 4 | Reservar individual | `GET /Reservations/Create?roomId=` | SP4, SP5 |
-| 5 | Reservar grupo | `GET /Reservations/Create?roomIds=` | SP4, SP5 |
-| 6 | Confirmar reserva | `POST /Reservations/Create` | SP4, SP5 |
-| 7 | Ver mis reservas | Portal (Home/Index) | — |
-| 8 | Cancelar reserva | `POST /Reservations/Cancel/{id}` | — |
-| 9 | Recuperar contraseña | Identity ForgotPassword | — |
+| Paso | Acción                | Endpoint                            | SP utilizado  |
+| ---- | --------------------- | ----------------------------------- | ------------- |
+| 1    | Buscar disponibilidad | `POST /Home/SearchAvailability`     | SP1, SP2, SP4 |
+| 2    | Ver resultados        | Partial view AJAX                   | —             |
+| 3    | Marcar favorito       | `POST /Favorites/ToggleRoom`        | —             |
+| 4    | Reservar individual   | `GET /Reservations/Create?roomId=`  | SP4, SP5      |
+| 5    | Reservar grupo        | `GET /Reservations/Create?roomIds=` | SP4, SP5      |
+| 6    | Confirmar reserva     | `POST /Reservations/Create`         | SP4, SP5      |
+| 7    | Ver mis reservas      | Portal (Home/Index)                 | —             |
+| 8    | Cancelar reserva      | `POST /Reservations/Cancel/{id}`    | —             |
+| 9    | Recuperar contraseña  | Identity ForgotPassword             | —             |
 
-*Tabla 9. Resumen de endpoints y SPs por paso del flujo del asociado.*
+_Tabla 9. Resumen de endpoints y SPs por paso del flujo del asociado._
