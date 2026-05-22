@@ -275,9 +275,12 @@ _Tabla 1. Campos del formulario de búsqueda de disponibilidad._
 <p class="fig-caption">Figura 4. Formulario de búsqueda con selección de sede, rango de fechas y número de huéspedes.</p>
 </div>
 
-<div class="pb"></div>
+<div class="fig">
+<img src="docs/screenshots/guest-04b-datepicker.png" alt="Selector de fechas">
+<p class="fig-caption">Figura 4b. Widget de calendario desplegable para seleccionar fechas de entrada y salida.</p>
+</div>
 
-## Paso 2 — Resultados de disponibilidad
+<div class="pb"></div>
 
 Los resultados se presentan agrupados por sede. Para cada sede se muestra:
 
@@ -565,49 +568,31 @@ Si el asociado olvida su contraseña:
 ```
 Asociado (Guest/Cliente)
   │
-  ├─► LOGIN
-  │     └─► Portal personalizado ("Hola, [nombre]")
+  ├─► LOGIN → Portal personalizado ("Hola, [nombre]")
   │
   ├─► BUSCAR DISPONIBILIDAD
-  │     ├─► Seleccionar sede (o todas)
-  │     ├─► Seleccionar fechas (check-in / check-out)
-  │     ├─► Seleccionar huéspedes
-  │     └─► Resultados AJAX (SP1 + SP2 + SP4)
+  │     ├─ Sede (o todas) · Fechas (check-in/out) · Huéspedes
+  │     └─ Resultados AJAX (SP1 + SP2 + SP4)
   │
   ├─► EXPLORAR RESULTADOS
-  │     ├─► Vista tabla / lista
-  │     ├─► Habitaciones agrupadas por sede
-  │     ├─► Precios calculados por noche y total
-  │     └─► Etiquetas: "Mejor opción" / "Solo grupo"
+  │     ├─ Vista tabla/lista · Agrupadas por sede
+  │     └─ Precios noche/total · Etiquetas "Mejor opción"/"Solo grupo"
   │
   ├─► MARCAR FAVORITOS
-  │     ├─► Clic en corazón (toggle AJAX)
-  │     ├─► Persistencia en tabla Favorites
-  │     └─► Visibles en futuras búsquedas
+  │     └─ Toggle AJAX (corazón) · Persistencia en Favorites
   │
   ├─► SELECCIONAR HABITACIÓN(ES)
-  │     ├─► Individual: botón "Reservar"
-  │     ├─► Grupal: checkboxes + medidor
-  │     ├─► Sugerir grupo (auto-select)
-  │     └─► Reservar toda la sede
+  │     ├─ Individual: "Reservar" · Grupal: checkboxes + medidor
+  │     └─ Sugerir grupo (auto-select) · Reservar toda sede
   │
   ├─► CONFIRMAR RESERVA
-  │     ├─► Resumen de costos (SP4)
-  │     ├─► Datos del huésped
-  │     ├─► Transacción SERIALIZABLE
-  │     ├─► Validación overbooking (SP5)
-  │     └─► Email de confirmación (SMTP)
+  │     ├─ Resumen costos (SP4) · Datos huésped
+  │     └─ Transacción SERIALIZABLE · Overbooking (SP5) · Email SMTP
   │
   ├─► MIS RESERVAS
-  │     ├─► Historial (últimas 10)
-  │     ├─► Estado actual
-  │     ├─► Ver detalles
-  │     └─► Cancelar (solo Pending)
+  │     └─ Historial (últimas 10) · Estado · Detalles · Cancelar (Pending)
   │
-  ├─► CANCELAR RESERVA
-  │     ├─► Solo estado Pending
-  │     ├─► Verificación de propiedad
-  │     └─► Cambio a estado Cancelled
+  ├─► CANCELAR → Solo Pending · Verificación propiedad → Cancelled
   │
   └─► CERRAR SESIÓN
 ```
