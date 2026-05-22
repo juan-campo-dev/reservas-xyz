@@ -439,18 +439,18 @@ Desarrollar un sistema web completo de gestión de reservas hoteleras para el Fo
 
 El Fondo XYZ cuenta con 8 sedes distribuidas en diferentes ciudades de Colombia:
 
-| # | Sede | Ciudad | Capacidad |
-|---|------|--------|-----------|
-| 1 | Villeta | Villeta | 32 personas |
-| 2 | El Placer | Fusagasugá | 34 personas |
-| 3 | Gonzalo Morante | Chinchiná | 30 personas |
-| 4 | Tablones | Palmira | 24 personas |
-| 5 | Manguruma | Santa Fe de Antioquia | 46 personas |
-| 6 | Federmán | Bogotá | 8 personas |
-| 7 | Suramericana | Medellín | 9 personas |
-| 8 | El Rodadero | Santa Marta | 20 personas |
+| #   | Sede            | Ciudad                | Capacidad   |
+| --- | --------------- | --------------------- | ----------- |
+| 1   | Villeta         | Villeta               | 32 personas |
+| 2   | El Placer       | Fusagasugá            | 34 personas |
+| 3   | Gonzalo Morante | Chinchiná             | 30 personas |
+| 4   | Tablones        | Palmira               | 24 personas |
+| 5   | Manguruma       | Santa Fe de Antioquia | 46 personas |
+| 6   | Federmán        | Bogotá                | 8 personas  |
+| 7   | Suramericana    | Medellín              | 9 personas  |
+| 8   | El Rodadero     | Santa Marta           | 20 personas |
 
-*Tabla 1. Sedes recreativas del Fondo de Empleados XYZ.*
+_Tabla 1. Sedes recreativas del Fondo de Empleados XYZ._
 
 ## 1.3 Necesidad
 
@@ -465,7 +465,7 @@ Los asociados requieren un sistema web para:
 
 ![Pantalla principal del sistema](docs/screenshots/01-home.png)
 
-*Figura 1. Landing page del sistema ReservasXYZ con las 8 sedes disponibles, tarifas de referencia y accesos a registro y login.*
+_Figura 1. Landing page del sistema ReservasXYZ con las 8 sedes disponibles, tarifas de referencia y accesos a registro y login._
 
 <div class="pb"></div>
 
@@ -511,14 +511,14 @@ Web ──→ Application ──→ Domain ←── Infrastructure
 
 ## 2.4 Responsabilidades por capa
 
-| Capa | Proyecto | Responsabilidad |
-|------|----------|----------------|
-| Presentación | `ReservasXYZ.Web` | Controllers MVC, Razor Views, Identity Pages, middleware, DI, wwwroot |
-| Aplicación | `ReservasXYZ.Application` | DTOs, servicios de aplicación, validadores FluentValidation, AutoMapper |
+| Capa            | Proyecto                     | Responsabilidad                                                            |
+| --------------- | ---------------------------- | -------------------------------------------------------------------------- |
+| Presentación    | `ReservasXYZ.Web`            | Controllers MVC, Razor Views, Identity Pages, middleware, DI, wwwroot      |
+| Aplicación      | `ReservasXYZ.Application`    | DTOs, servicios de aplicación, validadores FluentValidation, AutoMapper    |
 | Infraestructura | `ReservasXYZ.Infrastructure` | DbContext, repositorios, email (MailKit), DataSeeder, Fluent API, Identity |
-| Dominio | `ReservasXYZ.Domain` | Entidades de negocio, enums, interfaces de repositorio |
+| Dominio         | `ReservasXYZ.Domain`         | Entidades de negocio, enums, interfaces de repositorio                     |
 
-*Tabla 2. Responsabilidades por capa de la arquitectura Clean Architecture.*
+_Tabla 2. Responsabilidades por capa de la arquitectura Clean Architecture._
 
 ## 2.5 Estructura del proyecto
 
@@ -565,39 +565,39 @@ ReservasXYZ.sln
 
 ## 3.1 Stack tecnológico
 
-| Tecnología | Versión | Propósito |
-|-----------|---------|-----------|
-| .NET SDK | 8.0 | Runtime y compilación |
-| ASP.NET Core MVC | 8.0 | Framework web |
-| Razor Views / Pages | 8.0 | Motor de vistas server-side |
-| Entity Framework Core | 8.0.25 | ORM y migraciones |
-| SQL Server | 2022 Express | Motor de base de datos |
-| ASP.NET Core Identity | 8.0.25 | Autenticación y autorización |
-| AutoMapper | 13.x | Mapeo entidades ↔ DTOs |
-| FluentValidation | 11.x | Validación declarativa |
-| MailKit | 4.x | Cliente SMTP |
-| Tailwind CSS | 4.3.0 | Framework CSS |
-| Node.js | 20+ | Build de Tailwind CSS |
-| Docker | 29.x | Contenedores |
-| Docker Compose | v2 | Orquestación |
-| Nginx | Alpine | Reverse proxy + SSL |
-| Certbot | Latest | Certificados Let's Encrypt |
+| Tecnología            | Versión      | Propósito                    |
+| --------------------- | ------------ | ---------------------------- |
+| .NET SDK              | 8.0          | Runtime y compilación        |
+| ASP.NET Core MVC      | 8.0          | Framework web                |
+| Razor Views / Pages   | 8.0          | Motor de vistas server-side  |
+| Entity Framework Core | 8.0.25       | ORM y migraciones            |
+| SQL Server            | 2022 Express | Motor de base de datos       |
+| ASP.NET Core Identity | 8.0.25       | Autenticación y autorización |
+| AutoMapper            | 13.x         | Mapeo entidades ↔ DTOs       |
+| FluentValidation      | 11.x         | Validación declarativa       |
+| MailKit               | 4.x          | Cliente SMTP                 |
+| Tailwind CSS          | 4.3.0        | Framework CSS                |
+| Node.js               | 20+          | Build de Tailwind CSS        |
+| Docker                | 29.x         | Contenedores                 |
+| Docker Compose        | v2           | Orquestación                 |
+| Nginx                 | Alpine       | Reverse proxy + SSL          |
+| Certbot               | Latest       | Certificados Let's Encrypt   |
 
-*Tabla 3. Stack tecnológico del sistema ReservasXYZ.*
+_Tabla 3. Stack tecnológico del sistema ReservasXYZ._
 
 ## 3.2 Patrones de diseño
 
-| Patrón | Implementación |
-|--------|---------------|
-| Repository Pattern | `IRepository<T>` genérico + repositorios especializados |
-| Unit of Work | `ApplicationDbContext.SaveChangesAsync()` |
-| DTO Pattern | Objetos separados para Create, Update y View |
-| Dependency Injection | Contenedor nativo de ASP.NET Core |
-| Strategy Pattern | Motor de tarificación con Kind (Standard/SpecialWeekday) |
-| Template Method | EmailTemplateService para tipos de email |
-| Soft Delete | `IsActive = false` en lugar de eliminar registros |
+| Patrón               | Implementación                                           |
+| -------------------- | -------------------------------------------------------- |
+| Repository Pattern   | `IRepository<T>` genérico + repositorios especializados  |
+| Unit of Work         | `ApplicationDbContext.SaveChangesAsync()`                |
+| DTO Pattern          | Objetos separados para Create, Update y View             |
+| Dependency Injection | Contenedor nativo de ASP.NET Core                        |
+| Strategy Pattern     | Motor de tarificación con Kind (Standard/SpecialWeekday) |
+| Template Method      | EmailTemplateService para tipos de email                 |
+| Soft Delete          | `IsActive = false` en lugar de eliminar registros        |
 
-*Tabla 4. Patrones de diseño implementados.*
+_Tabla 4. Patrones de diseño implementados._
 
 <div class="pb"></div>
 
@@ -620,30 +620,30 @@ Sites (Sedes)
 
 ## 4.2 Relaciones
 
-| Relación | Tipo | FK | Descripción |
-|----------|------|----|-------------|
-| Site → Accommodation | 1:N | `SiteId` | Una sede tiene múltiples alojamientos |
-| Accommodation → Room | 1:N | `AccommodationId` | Un alojamiento tiene múltiples habitaciones |
-| Room → Rate | 1:N | `RoomId` | Una habitación tiene tarifas por temporada |
-| Season → Rate | 1:N | `SeasonId` | Una temporada define tarifas múltiples |
-| User → Reservation | 1:N | `UserId` | Un usuario tiene múltiples reservas |
-| Reservation → Detail | 1:N | `ReservationId` | Una reserva incluye múltiples habitaciones |
-| Room → Detail | 1:N | `RoomId` | Una habitación en múltiples reservas |
-| User → Favorite | 1:N | `UserId` | Favoritos por usuario |
-| Room → Favorite | 1:N | `RoomId` | Habitaciones marcadas |
+| Relación             | Tipo | FK                | Descripción                                 |
+| -------------------- | ---- | ----------------- | ------------------------------------------- |
+| Site → Accommodation | 1:N  | `SiteId`          | Una sede tiene múltiples alojamientos       |
+| Accommodation → Room | 1:N  | `AccommodationId` | Un alojamiento tiene múltiples habitaciones |
+| Room → Rate          | 1:N  | `RoomId`          | Una habitación tiene tarifas por temporada  |
+| Season → Rate        | 1:N  | `SeasonId`        | Una temporada define tarifas múltiples      |
+| User → Reservation   | 1:N  | `UserId`          | Un usuario tiene múltiples reservas         |
+| Reservation → Detail | 1:N  | `ReservationId`   | Una reserva incluye múltiples habitaciones  |
+| Room → Detail        | 1:N  | `RoomId`          | Una habitación en múltiples reservas        |
+| User → Favorite      | 1:N  | `UserId`          | Favoritos por usuario                       |
+| Room → Favorite      | 1:N  | `RoomId`          | Habitaciones marcadas                       |
 
-*Tabla 5. Relaciones entre entidades del modelo de datos.*
+_Tabla 5. Relaciones entre entidades del modelo de datos._
 
 ## 4.3 Índices
 
-| Tabla | Índice | Tipo | Columnas |
-|-------|--------|------|----------|
-| Rooms | `IX_Rooms_Accommodation_Number` | UNIQUE | (AccommodationId, RoomNumber) |
-| Rates | `IX_Rates_Room_Season_Kind` | UNIQUE | (RoomId, SeasonId, Kind) |
-| Favorites | `IX_Favorites_User_Room` | UNIQUE | (UserId, RoomId) |
-| ReservationDetails | `IX_ReservationDetail_Room` | INDEX | (RoomId) |
+| Tabla              | Índice                          | Tipo   | Columnas                      |
+| ------------------ | ------------------------------- | ------ | ----------------------------- |
+| Rooms              | `IX_Rooms_Accommodation_Number` | UNIQUE | (AccommodationId, RoomNumber) |
+| Rates              | `IX_Rates_Room_Season_Kind`     | UNIQUE | (RoomId, SeasonId, Kind)      |
+| Favorites          | `IX_Favorites_User_Room`        | UNIQUE | (UserId, RoomId)              |
+| ReservationDetails | `IX_ReservationDetail_Room`     | INDEX  | (RoomId)                      |
 
-*Tabla 6. Índices para optimización de consultas.*
+_Tabla 6. Índices para optimización de consultas._
 
 ## 4.4 Constraints de integridad
 
@@ -706,12 +706,12 @@ Se implementaron **6 Stored Procedures** — 4 requeridos + 2 auxiliares.
 
 **Propósito:** Habitaciones disponibles en un rango de fechas.
 
-| Parámetro | Tipo | Dir. | Descripción |
-|-----------|------|------|-------------|
-| `@CheckIn` | DATE | IN | Fecha de entrada |
-| `@CheckOut` | DATE | IN | Fecha de salida |
+| Parámetro   | Tipo | Dir. | Descripción      |
+| ----------- | ---- | ---- | ---------------- |
+| `@CheckIn`  | DATE | IN   | Fecha de entrada |
+| `@CheckOut` | DATE | IN   | Fecha de salida  |
 
-*Tabla 7. Parámetros de sp_GetAvailableRoomsByDates.*
+_Tabla 7. Parámetros de sp_GetAvailableRoomsByDates._
 
 Selecciona habitaciones activas sin reservas solapadas. Condición: `CheckIn < @CheckOut AND CheckOut > @CheckIn`.
 
@@ -724,13 +724,13 @@ EXEC sp_GetAvailableRoomsByDates
 
 **Propósito:** Disponibilidad por fechas + capacidad mínima.
 
-| Parámetro | Tipo | Dir. | Descripción |
-|-----------|------|------|-------------|
-| `@CheckIn` | DATE | IN | Fecha de entrada |
-| `@CheckOut` | DATE | IN | Fecha de salida |
-| `@Guests` | INT | IN | Número de huéspedes |
+| Parámetro   | Tipo | Dir. | Descripción         |
+| ----------- | ---- | ---- | ------------------- |
+| `@CheckIn`  | DATE | IN   | Fecha de entrada    |
+| `@CheckOut` | DATE | IN   | Fecha de salida     |
+| `@Guests`   | INT  | IN   | Número de huéspedes |
 
-*Tabla 8. Parámetros de sp_GetAvailableRoomsByDatesAndGuests.*
+_Tabla 8. Parámetros de sp_GetAvailableRoomsByDatesAndGuests._
 
 Misma lógica que SP1 + filtro `MaxGuests >= @Guests`.
 
@@ -738,25 +738,25 @@ Misma lógica que SP1 + filtro `MaxGuests >= @Guests`.
 
 **Propósito:** Tarifas configuradas para una habitación.
 
-| Parámetro | Tipo | Dir. | Descripción |
-|-----------|------|------|-------------|
-| `@RoomId` | INT | IN | ID de la habitación |
+| Parámetro | Tipo | Dir. | Descripción         |
+| --------- | ---- | ---- | ------------------- |
+| `@RoomId` | INT  | IN   | ID de la habitación |
 
-*Tabla 9. Parámetros de sp_GetRoomRates.*
+_Tabla 9. Parámetros de sp_GetRoomRates._
 
 ## 6.4 SP4 — sp_CalculateTotalRate
 
 **Propósito:** Tarifa total de una estadía aplicando reglas FODUN.
 
-| Parámetro | Tipo | Dir. | Descripción |
-|-----------|------|------|-------------|
-| `@RoomId` | INT | IN | ID de la habitación |
-| `@CheckIn` | DATE | IN | Fecha de entrada |
-| `@CheckOut` | DATE | IN | Fecha de salida |
-| `@TotalGuests` | INT | IN | Número de huéspedes |
-| `@TotalRate` | DECIMAL(18,2) | OUT | Tarifa calculada |
+| Parámetro      | Tipo          | Dir. | Descripción         |
+| -------------- | ------------- | ---- | ------------------- |
+| `@RoomId`      | INT           | IN   | ID de la habitación |
+| `@CheckIn`     | DATE          | IN   | Fecha de entrada    |
+| `@CheckOut`    | DATE          | IN   | Fecha de salida     |
+| `@TotalGuests` | INT           | IN   | Número de huéspedes |
+| `@TotalRate`   | DECIMAL(18,2) | OUT  | Tarifa calculada    |
 
-*Tabla 10. Parámetros de sp_CalculateTotalRate.*
+_Tabla 10. Parámetros de sp_CalculateTotalRate._
 
 **Motor de tarificación:**
 
@@ -777,14 +777,14 @@ SELECT @Total AS TarifaTotal;
 
 **Ejemplo** — 3 noches, 6 personas, temporada baja, Villeta:
 
-| Noche | Día | Tarifa | Extra (2 pers) | Total |
-|-------|-----|--------|----------------|-------|
-| 1 | Lunes | $27.000 | 2 × $11.000 | $49.000 |
-| 2 | Martes | $27.000 | 2 × $11.000 | $49.000 |
-| 3 | Miércoles | $27.000 | 2 × $11.000 | $49.000 |
-| **Total** | | | | **$147.000** |
+| Noche     | Día       | Tarifa  | Extra (2 pers) | Total        |
+| --------- | --------- | ------- | -------------- | ------------ |
+| 1         | Lunes     | $27.000 | 2 × $11.000    | $49.000      |
+| 2         | Martes    | $27.000 | 2 × $11.000    | $49.000      |
+| 3         | Miércoles | $27.000 | 2 × $11.000    | $49.000      |
+| **Total** |           |         |                | **$147.000** |
 
-*Tabla 11. Ejemplo de cálculo de tarifa para 3 noches con SP4.*
+_Tabla 11. Ejemplo de cálculo de tarifa para 3 noches con SP4._
 
 ## 6.5 SP5 — sp_ValidateOverbooking
 
@@ -810,40 +810,40 @@ Consulta avanzada cruzando sitio, temporada, alojamiento y personas. Todos los p
 
 ## 7.1 Configuración
 
-| Parámetro | Valor |
-|-----------|-------|
+| Parámetro                  | Valor        |
+| -------------------------- | ------------ |
 | Longitud mínima contraseña | 8 caracteres |
-| Requiere mayúscula | Sí |
-| Requiere minúscula | Sí |
-| Requiere dígito | Sí |
-| Requiere carácter especial | Sí |
-| Intentos antes de bloqueo | 5 |
-| Tiempo de bloqueo | 15 minutos |
+| Requiere mayúscula         | Sí           |
+| Requiere minúscula         | Sí           |
+| Requiere dígito            | Sí           |
+| Requiere carácter especial | Sí           |
+| Intentos antes de bloqueo  | 5            |
+| Tiempo de bloqueo          | 15 minutos   |
 
-*Tabla 12. Políticas de seguridad en ASP.NET Core Identity.*
+_Tabla 12. Políticas de seguridad en ASP.NET Core Identity._
 
 ## 7.2 Roles
 
-| Rol | Acceso |
-|-----|--------|
-| Admin | CRUD completo, gestión de reservas, dashboard |
-| Receptionist | Gestión de reservas, check-in/check-out |
-| Guest / Cliente | Disponibilidad, reservas propias, favoritos |
+| Rol             | Acceso                                        |
+| --------------- | --------------------------------------------- |
+| Admin           | CRUD completo, gestión de reservas, dashboard |
+| Receptionist    | Gestión de reservas, check-in/check-out       |
+| Guest / Cliente | Disponibilidad, reservas propias, favoritos   |
 
-*Tabla 13. Roles del sistema.*
+_Tabla 13. Roles del sistema._
 
 ## 7.3 Controles OWASP
 
-| Vulnerabilidad | Control |
-|---------------|---------|
-| A01: Broken Access Control | `[Authorize(Roles = "Admin")]`, verificación de propiedad |
-| A02: Cryptographic Failures | PBKDF2 con salt aleatorio |
-| A03: Injection | Queries parametrizadas, `SqlParameter` tipados |
-| A05: Security Misconfiguration | Secrets en variables de entorno |
-| A07: Auth Failures | Bloqueo tras 5 intentos, mensajes genéricos |
-| A08: Data Integrity | `[ValidateAntiForgeryToken]`, tokens anti-CSRF |
+| Vulnerabilidad                 | Control                                                   |
+| ------------------------------ | --------------------------------------------------------- |
+| A01: Broken Access Control     | `[Authorize(Roles = "Admin")]`, verificación de propiedad |
+| A02: Cryptographic Failures    | PBKDF2 con salt aleatorio                                 |
+| A03: Injection                 | Queries parametrizadas, `SqlParameter` tipados            |
+| A05: Security Misconfiguration | Secrets en variables de entorno                           |
+| A07: Auth Failures             | Bloqueo tras 5 intentos, mensajes genéricos               |
+| A08: Data Integrity            | `[ValidateAntiForgeryToken]`, tokens anti-CSRF            |
 
-*Tabla 14. Controles de seguridad según OWASP Top 10.*
+_Tabla 14. Controles de seguridad según OWASP Top 10._
 
 ## 7.4 Autenticación y registro
 
@@ -950,7 +950,7 @@ Usuario anónimo
 
 ![Gestión de reservas](docs/screenshots/10-reservations-crud.png)
 
-*Figura 10. Panel de gestión de reservas con filtros por estado y acciones de confirmación, check-in/out y cancelación.*
+_Figura 10. Panel de gestión de reservas con filtros por estado y acciones de confirmación, check-in/out y cancelación._
 
 ## 8.5 Portal del asociado
 
@@ -973,7 +973,7 @@ Usuario anónimo
 
 ![Recuperar contraseña](docs/screenshots/16-forgot-password.png)
 
-*Figura 13. Formulario de recuperación de contraseña vía email SMTP.*
+_Figura 13. Formulario de recuperación de contraseña vía email SMTP._
 
 <div class="pb"></div>
 
@@ -1003,13 +1003,13 @@ IEmailSender<ApplicationUser> (Identity)
 
 ## 9.3 Protocolos
 
-| Puerto | Protocolo | Comportamiento |
-|--------|-----------|----------------|
-| 465 | SSL | Conexión directa (`SslOnConnect`) |
-| 587 | STARTTLS | Plain + upgrade a TLS (`StartTls`) |
-| Otro | Auto | Detección automática |
+| Puerto | Protocolo | Comportamiento                     |
+| ------ | --------- | ---------------------------------- |
+| 465    | SSL       | Conexión directa (`SslOnConnect`)  |
+| 587    | STARTTLS  | Plain + upgrade a TLS (`StartTls`) |
+| Otro   | Auto      | Detección automática               |
 
-*Tabla 15. Protocolos SMTP soportados.*
+_Tabla 15. Protocolos SMTP soportados._
 
 ## 9.4 Seguridad
 
@@ -1041,14 +1041,14 @@ IEmailSender<ApplicationUser> (Identity)
 
 ## 10.2 Servicios
 
-| Servicio | Imagen | Puerto | Health check |
-|----------|--------|--------|-------------|
-| `sqlserver` | mssql/server:2022-latest | 1433 | sqlcmd cada 15s |
-| `web` | Build local | 5000 | depends_on: sqlserver |
-| `nginx` | nginx:alpine | 80, 443 | — |
-| `certbot` | certbot/certbot | — | Renewal 6h |
+| Servicio    | Imagen                   | Puerto  | Health check          |
+| ----------- | ------------------------ | ------- | --------------------- |
+| `sqlserver` | mssql/server:2022-latest | 1433    | sqlcmd cada 15s       |
+| `web`       | Build local              | 5000    | depends_on: sqlserver |
+| `nginx`     | nginx:alpine             | 80, 443 | —                     |
+| `certbot`   | certbot/certbot          | —       | Renewal 6h            |
 
-*Tabla 16. Servicios Docker Compose.*
+_Tabla 16. Servicios Docker Compose._
 
 ## 10.3 Variables de entorno
 
@@ -1079,18 +1079,18 @@ reservas-db        Up 2h (healthy)        0.0.0.0:1433→1433
 
 ## 11.1 Infraestructura
 
-| Componente | Detalle |
-|-----------|---------|
-| Proveedor | Google Cloud Platform (GCE) |
-| Instancia | e2-medium (2 vCPU, 4 GB RAM, 40 GB SSD) |
-| SO | Ubuntu 22.04 LTS |
-| Runtime | Docker 29.5.2 + Docker Compose v2 |
-| Reverse Proxy | Nginx Alpine |
-| SSL | Let's Encrypt via Certbot (renovación cada 6h) |
-| DNS | Hostinger (registro A → IP estática GCP) |
-| URL | https://reservas-xyz.app-dev.icu |
+| Componente    | Detalle                                        |
+| ------------- | ---------------------------------------------- |
+| Proveedor     | Google Cloud Platform (GCE)                    |
+| Instancia     | e2-medium (2 vCPU, 4 GB RAM, 40 GB SSD)        |
+| SO            | Ubuntu 22.04 LTS                               |
+| Runtime       | Docker 29.5.2 + Docker Compose v2              |
+| Reverse Proxy | Nginx Alpine                                   |
+| SSL           | Let's Encrypt via Certbot (renovación cada 6h) |
+| DNS           | Hostinger (registro A → IP estática GCP)       |
+| URL           | https://reservas-xyz.app-dev.icu               |
 
-*Tabla 17. Infraestructura de producción.*
+_Tabla 17. Infraestructura de producción._
 
 ## 11.2 Seguridad VPS
 
@@ -1103,13 +1103,13 @@ reservas-db        Up 2h (healthy)        0.0.0.0:1433→1433
 
 ## 11.3 Persistencia
 
-| Volumen | Contenido |
-|---------|-----------|
-| `sqldata` | Datos SQL Server |
+| Volumen       | Contenido        |
+| ------------- | ---------------- |
+| `sqldata`     | Datos SQL Server |
 | `certbot-etc` | Certificados SSL |
-| `certbot-var` | Datos Certbot |
+| `certbot-var` | Datos Certbot    |
 
-*Tabla 18. Volúmenes Docker para persistencia.*
+_Tabla 18. Volúmenes Docker para persistencia._
 
 ## 11.4 Evidencia
 
@@ -1175,13 +1175,13 @@ GO
 
 ## 12.4 Usuarios de prueba
 
-| Rol | Email | Contraseña |
-|-----|-------|------------|
-| Admin | admin@hotel.com | Admin123! |
-| Admin (test) | admin@test.com | Admin123* |
-| Cliente (test) | cliente@test.com | Cliente123* |
+| Rol            | Email            | Contraseña   |
+| -------------- | ---------------- | ------------ |
+| Admin          | admin@hotel.com  | Admin123!    |
+| Admin (test)   | admin@test.com   | Admin123\*   |
+| Cliente (test) | cliente@test.com | Cliente123\* |
 
-*Tabla 19. Credenciales de usuarios de prueba.*
+_Tabla 19. Credenciales de usuarios de prueba._
 
 <div class="pb"></div>
 
@@ -1193,27 +1193,27 @@ GO
 
 ## 13.1 Cumplimiento de requisitos
 
-| # | Requisito | Estado |
-|---|-----------|--------|
-| 1 | Estructura BD relacional SQL Server | ✅ |
-| 2 | SP disponibilidad por fechas | ✅ sp_GetAvailableRoomsByDates |
-| 3 | SP disponibilidad por fechas + personas | ✅ sp_GetAvailableRoomsByDatesAndGuests |
-| 4 | SP tarifas por sitio/temporada/personas | ✅ sp_GetRoomRates + sp_GetRatesByCriteria |
-| 5 | SP cálculo tarifa total | ✅ sp_CalculateTotalRate |
-| 6 | Diseño formularios web | ✅ Razor Views |
-| 7 | Registro de usuarios | ✅ Nombre, apellido, documento, email |
-| 8 | Login (solo autenticados) | ✅ [Authorize] + Identity |
-| 9 | Recuperación contraseña SMTP | ✅ MailKit |
-| 10 | CRUD formularios | ✅ 6 módulos completos |
-| 11 | Consulta disponibilidad | ✅ Por fechas y personas |
-| 12 | Guardar reservas | ✅ Transacción SERIALIZABLE |
-| 13 | MVC .NET Core | ✅ ASP.NET Core 8.0 |
-| 14 | Programación en capas | ✅ Clean Architecture (4 capas) |
-| 15 | Entity Framework | ✅ EF Core 8.0 + Fluent API |
-| 16 | Identity | ✅ Roles + bloqueo + email |
-| 17 | Documento técnico | ✅ Este documento |
+| #   | Requisito                               | Estado                                     |
+| --- | --------------------------------------- | ------------------------------------------ |
+| 1   | Estructura BD relacional SQL Server     | ✅                                         |
+| 2   | SP disponibilidad por fechas            | ✅ sp_GetAvailableRoomsByDates             |
+| 3   | SP disponibilidad por fechas + personas | ✅ sp_GetAvailableRoomsByDatesAndGuests    |
+| 4   | SP tarifas por sitio/temporada/personas | ✅ sp_GetRoomRates + sp_GetRatesByCriteria |
+| 5   | SP cálculo tarifa total                 | ✅ sp_CalculateTotalRate                   |
+| 6   | Diseño formularios web                  | ✅ Razor Views                             |
+| 7   | Registro de usuarios                    | ✅ Nombre, apellido, documento, email      |
+| 8   | Login (solo autenticados)               | ✅ [Authorize] + Identity                  |
+| 9   | Recuperación contraseña SMTP            | ✅ MailKit                                 |
+| 10  | CRUD formularios                        | ✅ 6 módulos completos                     |
+| 11  | Consulta disponibilidad                 | ✅ Por fechas y personas                   |
+| 12  | Guardar reservas                        | ✅ Transacción SERIALIZABLE                |
+| 13  | MVC .NET Core                           | ✅ ASP.NET Core 8.0                        |
+| 14  | Programación en capas                   | ✅ Clean Architecture (4 capas)            |
+| 15  | Entity Framework                        | ✅ EF Core 8.0 + Fluent API                |
+| 16  | Identity                                | ✅ Roles + bloqueo + email                 |
+| 17  | Documento técnico                       | ✅ Este documento                          |
 
-*Tabla 20. Matriz de cumplimiento de requisitos.*
+_Tabla 20. Matriz de cumplimiento de requisitos._
 
 ## 13.2 Valor agregado
 
@@ -1229,15 +1229,15 @@ GO
 
 ## 13.3 Decisiones de diseño
 
-| Decisión | Justificación |
-|----------|---------------|
-| Clean Architecture | Separación de responsabilidades, testabilidad |
-| SPs + EF Core | SPs para lógica compleja, EF Core para CRUD, fallback LINQ |
-| Transacción SERIALIZABLE | Prevención de overbooking concurrente |
-| Docker multi-stage | Imagen optimizada (~220 MB), build reproducible |
-| Tailwind CSS v4 | Build local, sin CDN, UI responsive |
+| Decisión                 | Justificación                                              |
+| ------------------------ | ---------------------------------------------------------- |
+| Clean Architecture       | Separación de responsabilidades, testabilidad              |
+| SPs + EF Core            | SPs para lógica compleja, EF Core para CRUD, fallback LINQ |
+| Transacción SERIALIZABLE | Prevención de overbooking concurrente                      |
+| Docker multi-stage       | Imagen optimizada (~220 MB), build reproducible            |
+| Tailwind CSS v4          | Build local, sin CDN, UI responsive                        |
 
-*Tabla 21. Decisiones arquitectónicas.*
+_Tabla 21. Decisiones arquitectónicas._
 
 ## 13.4 Mejoras futuras
 
@@ -1250,6 +1250,6 @@ GO
 
 ---
 
-*Documento técnico — Prueba técnica Analista Desarrollador .NET — Fondo de Empleados XYZ (FODUN)*
+_Documento técnico — Prueba técnica Analista Desarrollador .NET — Fondo de Empleados XYZ (FODUN)_
 
-*Mayo 2026 · Juan Campo · v1.0*
+_Mayo 2026 · Juan Campo · v1.0_
