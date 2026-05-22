@@ -1,901 +1,1255 @@
-# Documento Técnico — ReservasXYZ
-
-## Sistema de Gestión y Reservas Hoteleras
-
-**Fondo de Empleados XYZ (FODUN)**
-
-**Prueba Técnica — Analista Desarrollador .NET**
-
-**Fecha:** Mayo 2026
-
+---
+pdf_options:
+  format: A4
+  margin:
+    top: 20mm
+    bottom: 20mm
+    left: 22mm
+    right: 22mm
+  printBackground: true
+  displayHeaderFooter: true
+  headerTemplate: '<div style="width:100%;font-size:7.5pt;font-family:Segoe UI,Arial,sans-serif;color:#888;padding:0 22mm;display:flex;justify-content:space-between;"><span></span><span>Sistema de Reservas XYZ — Documento Técnico v1.0</span></div>'
+  footerTemplate: '<div style="width:100%;font-size:7.5pt;font-family:Segoe UI,Arial,sans-serif;color:#888;padding:0 22mm;display:flex;justify-content:space-between;"><span>Juan Campo — Analista Desarrollador .NET</span><span>Página <span class="pageNumber"></span> de <span class="totalPages"></span></span></div>'
+body_class: print-doc
 ---
 
-## Tabla de Contenidos
-
-1. [Introducción](#1-introducción)
-2. [Arquitectura del Proyecto](#2-arquitectura-del-proyecto)
-3. [Programación en Capas](#3-programación-en-capas)
-4. [Modelo de Base de Datos Relacional](#4-modelo-de-base-de-datos-relacional)
-5. [Diagrama de Relaciones](#5-diagrama-de-relaciones)
-6. [Explicación de Tablas](#6-explicación-de-tablas)
-7. [Entity Framework Core](#7-entity-framework-core)
-8. [ASP.NET Core Identity](#8-aspnet-core-identity)
-9. [Lógica de Reservas](#9-lógica-de-reservas)
-10. [Disponibilidad](#10-disponibilidad)
-11. [Motor de Tarificación](#11-motor-de-tarificación)
-12. [Stored Procedures](#12-stored-procedures)
-13. [Servicio de Email (SMTP)](#13-servicio-de-email-smtp)
-14. [Docker y Contenedores](#14-docker-y-contenedores)
-15. [Despliegue en VPS](#15-despliegue-en-vps)
-16. [Seguridad](#16-seguridad)
-17. [Tecnologías y Librerías](#17-tecnologías-y-librerías)
-18. [Instrucciones de Ejecución](#18-instrucciones-de-ejecución)
-19. [Capturas de Pantalla](#19-capturas-de-pantalla)
-20. [Conclusiones](#20-conclusiones)
-
----
-
-## 1. Introducción
-
-### Contexto
-
-El Fondo de Empleados XYZ (FODUN) cuenta con múltiples sedes recreativas y apartamentos distribuidos en diferentes ciudades de Colombia. Actualmente, la información de disponibilidad y reservas se gestiona manualmente, lo que genera ineficiencias operativas y dificultades para los asociados al momento de planificar su uso.
-
-### Objetivo
-
-Desarrollar un sistema web que permita a los asociados del Fondo consultar la disponibilidad de sedes recreativas y apartamentos, visualizar tarifas según temporada y número de personas, y realizar reservas en línea. El sistema debe incluir un panel administrativo para la gestión integral de sedes, alojamientos, habitaciones, temporadas, tarifas y reservas.
-
-### Alcance
-
-El sistema cubre:
-
-- Registro y autenticación de usuarios con Identity.
-- Consulta de disponibilidad por fechas y capacidad.
-- Cálculo de tarifas dinámico basado en temporada, día de semana y personas adicionales.
-- Creación y gestión de reservas con control de overbooking.
-- Panel administrativo con CRUD completo.
-- Notificaciones por correo electrónico (SMTP).
-- Despliegue con Docker en VPS con SSL.
-
----
-
-## 2. Arquitectura del Proyecto
-
-El proyecto implementa **Clean Architecture** (Arquitectura Limpia) con separación en cuatro capas independientes. Esta arquitectura fue elegida por las siguientes razones:
-
-- **Independencia del framework**: El dominio no depende de ASP.NET Core ni de EF Core.
-- **Testabilidad**: Cada capa puede probarse de forma aislada.
-- **Mantenibilidad**: Los cambios en una capa no afectan a las demás.
-- **Separación de responsabilidades**: Cada capa tiene un propósito claro y definido.
-
-### Diagrama de capas
-
-```
-┌─────────────────────────────────────────────────┐
-│              ReservasXYZ.Web                     │
-│    Controllers · Razor Views · Identity Pages    │
-│    wwwroot · DI Configuration · Middleware        │
-├─────────────────────────────────────────────────┤
-│           ReservasXYZ.Application                │
-│      DTOs · Services · Validators · Mappings     │
-├─────────────────────────────────────────────────┤
-│          ReservasXYZ.Infrastructure              │
-│    DbContext · Repositories · Email · Seed · SPs │
-├─────────────────────────────────────────────────┤
-│             ReservasXYZ.Domain                   │
-│        Entities · Enums · Interfaces             │
-└─────────────────────────────────────────────────┘
-```
-
-### Flujo de dependencias
-
-```
-Web → Application → Domain ← Infrastructure
-```
-
-- **Domain** no depende de nada externo.
-- **Application** depende solo de Domain.
-- **Infrastructure** depende de Domain y Application.
-- **Web** depende de Application e Infrastructure (solo para DI).
-
----
-
-## 3. Programación en Capas
-
-### Capa de Dominio (`ReservasXYZ.Domain`)
-
-Contiene las entidades de negocio puras, sin dependencias de frameworks externos:
-
-- **Entities**: `Site`, `Accommodation`, `Room`, `Season`, `Rate`, `Reservation`, `ReservationDetail`, `ApplicationUser`, `Favorite`.
-- **Enums**: `RoomType` (8 tipos), `ReservationStatus` (6 estados), `RateKind` (Standard, SpecialWeekday).
-- **Interfaces de repositorio**: `IRepository<T>`, `IRoomRepository`, `IRateRepository`, `IReservationRepository`.
-
-Las interfaces de repositorio definen contratos que la capa de Infrastructure implementa. Esto permite la inversión de dependencias (Principio D de SOLID).
-
-### Capa de Aplicación (`ReservasXYZ.Application`)
-
-Orquesta la lógica de aplicación sin conocer los detalles de implementación:
-
-- **DTOs**: Objetos de transferencia de datos para cada operación (Create, Update, View). Evitan exponer las entidades directamente a la capa Web.
-- **Interfaces de servicios**: `ISiteService`, `IRoomService`, `IReservationService`, `IRateService`, `ISeasonService`, `IAccommodationService`, `IGuestPortalService`, `IDashboardService`, `IFavoriteService`.
-- **Servicios**: Implementaciones que coordinan repositorios y aplican reglas de negocio.
-- **Validators**: Validadores FluentValidation para cada DTO, con mensajes en español.
-- **Mappings**: Perfil de AutoMapper para conversión entidad ↔ DTO.
-
-### Capa de Infraestructura (`ReservasXYZ.Infrastructure`)
-
-Implementa los contratos definidos en las capas superiores:
-
-- **ApplicationDbContext**: Contexto de EF Core con configuraciones Fluent API.
-- **Repositorios**: `Repository<T>` genérico + especializados (`RoomRepository`, `RateRepository`, `ReservationRepository`).
-- **DataSeeder**: Carga automática de roles, usuarios, SPs y catálogo FODUN.
-- **Email**: `EmailService` (MailKit), `EmailTemplateService` (plantillas HTML), `IdentityEmailSender`.
-- **Identity**: Personalización de mensajes de error al español.
-- **StoredProcedures**: 6 SPs SQL Server cargados al iniciar.
-
-### Capa Web (`ReservasXYZ.Web`)
-
-Interfaz de usuario y punto de entrada de la aplicación:
-
-- **Controllers**: `HomeController`, `SitesController`, `AccommodationsController`, `RoomsController`, `SeasonsController`, `RatesController`, `ReservationsController`, `FavoritesController`.
-- **Razor Views**: Vistas organizadas por controlador con layout compartido.
-- **Areas/Identity**: Páginas personalizadas de Login, Register, ForgotPassword, ResetPassword, ConfirmEmail.
-- **wwwroot**: CSS (Tailwind), JS, imágenes.
-- **Program.cs**: Configuración de DI, middleware y cultura es-CO.
-
----
-
-## 4. Modelo de Base de Datos Relacional
-
-El modelo relacional fue diseñado para representar fielmente la estructura organizacional del Fondo XYZ:
-
-```
-Sites (1) ──── (N) Accommodations (1) ──── (N) Rooms
-                                                  │
-                                            (1) ──┼── (N) Rates
-                                                  │        │
-                                                  │   Seasons (1) ── (N) Rates
-                                                  │
-                                            (1) ──┼── (N) ReservationDetails
-                                                  │        │
-                                                  │   Reservations (1) ── (N) ReservationDetails
-                                                  │        │
-                                                  │   ApplicationUser (1) ── (N) Reservations
-                                                  │
-                                            (1) ──┼── (N) Favorites
-                                                         │
-                                                  ApplicationUser (1) ── (N) Favorites
-```
-
----
-
-## 5. Diagrama de Relaciones
-
-### Relaciones principales
-
-| Relación                        | Tipo | Descripción                                              |
-| ------------------------------- | ---- | -------------------------------------------------------- |
-| Site → Accommodation            | 1:N  | Una sede tiene múltiples alojamientos                    |
-| Accommodation → Room            | 1:N  | Un alojamiento tiene múltiples habitaciones              |
-| Room → Rate                     | 1:N  | Una habitación tiene tarifas por temporada               |
-| Season → Rate                   | 1:N  | Una temporada define tarifas para múltiples habitaciones |
-| ApplicationUser → Reservation   | 1:N  | Un usuario puede tener múltiples reservas                |
-| Reservation → ReservationDetail | 1:N  | Una reserva puede incluir múltiples habitaciones         |
-| Room → ReservationDetail        | 1:N  | Una habitación puede estar en múltiples reservas         |
-| ApplicationUser → Favorite      | 1:N  | Un usuario puede marcar habitaciones como favoritas      |
-| Room → Favorite                 | 1:N  | Una habitación puede ser favorita de múltiples usuarios  |
-
-### Índices
-
-| Tabla              | Índice                           | Tipo   | Columnas                    |
-| ------------------ | -------------------------------- | ------ | --------------------------- |
-| Rooms              | IX_Rooms_Accommodation_Number    | Unique | AccommodationId, RoomNumber |
-| Rates              | IX_Rates_Room_Season_Kind        | Unique | RoomId, SeasonId, Kind      |
-| Favorites          | IX_Favorites_User_Room           | Unique | UserId, RoomId              |
-| ReservationDetails | IX_ReservationDetail_Reservation | —      | ReservationId               |
-| ReservationDetails | IX_ReservationDetail_Room        | —      | RoomId                      |
-
----
-
-## 6. Explicación de Tablas
-
-### Sites (Sedes)
-
-Representa las sedes recreativas y apartamentos del Fondo XYZ.
-
-| Columna     | Tipo          | Descripción                          |
-| ----------- | ------------- | ------------------------------------ |
-| Id          | int (PK)      | Identificador único                  |
-| Name        | nvarchar(200) | Nombre de la sede                    |
-| City        | nvarchar(100) | Ciudad                               |
-| Address     | nvarchar(500) | Dirección                            |
-| Description | nvarchar(MAX) | Descripción detallada                |
-| MaxCapacity | int           | Capacidad máxima de personas         |
-| ImageUrl    | nvarchar(500) | URL de imagen                        |
-| IsActive    | bit           | Estado activo/inactivo (soft delete) |
-
-**Sedes FODUN cargadas**: Villeta, El Placer (Fusagasugá), Gonzalo Morante (Chinchiná), Tablones (Palmira), Manguruma (Santa Fe de Antioquia), Federmán (Bogotá), Suramericana (Medellín), El Rodadero (Santa Marta).
-
-### Accommodations (Alojamientos)
-
-Bloques de alojamiento dentro de una sede.
-
-| Columna     | Tipo             | Descripción             |
-| ----------- | ---------------- | ----------------------- |
-| Id          | int (PK)         | Identificador único     |
-| Name        | nvarchar(200)    | Nombre del alojamiento  |
-| Description | nvarchar(MAX)    | Descripción             |
-| SiteId      | int (FK → Sites) | Sede a la que pertenece |
-| IsActive    | bit              | Estado activo/inactivo  |
-
-### Rooms (Habitaciones)
-
-Habitaciones individuales con tipo y capacidad.
-
-| Columna         | Tipo                      | Descripción                                                         |
-| --------------- | ------------------------- | ------------------------------------------------------------------- |
-| Id              | int (PK)                  | Identificador único                                                 |
-| RoomNumber      | nvarchar(20)              | Número/código de habitación                                         |
-| Type            | int (enum RoomType)       | Tipo: Single, Double, Twin, Suite, Deluxe, Family, Cabin, Apartment |
-| MaxGuests       | int                       | Capacidad máxima de huéspedes                                       |
-| BasePrice       | decimal(18,2)             | Precio base por noche (fallback si no hay Rate)                     |
-| Description     | nvarchar(MAX)             | Descripción                                                         |
-| AccommodationId | int (FK → Accommodations) | Alojamiento al que pertenece                                        |
-| IsActive        | bit                       | Estado activo/inactivo                                              |
-
-### Seasons (Temporadas)
-
-Períodos con multiplicador de precio.
-
-| Columna         | Tipo          | Descripción                                |
-| --------------- | ------------- | ------------------------------------------ |
-| Id              | int (PK)      | Identificador único                        |
-| Name            | nvarchar(100) | Nombre (Baja, Alta, Especial)              |
-| StartDate       | date          | Fecha de inicio                            |
-| EndDate         | date          | Fecha de fin                               |
-| PriceMultiplier | decimal(5,2)  | Multiplicador de precio (1.0 = sin cambio) |
-| IsActive        | bit           | Estado activo/inactivo                     |
-
-### Rates (Tarifas)
-
-Tarifa por habitación + temporada + tipo.
-
-| Columna          | Tipo                | Descripción                                |
-| ---------------- | ------------------- | ------------------------------------------ |
-| Id               | int (PK)            | Identificador único                        |
-| PricePerNight    | decimal(18,2)       | Precio por noche                           |
-| BaseGuests       | int                 | Huéspedes incluidos en el precio base      |
-| ExtraPersonPrice | decimal(18,2)       | Precio por persona adicional               |
-| Kind             | int (enum RateKind) | 0 = Standard, 1 = SpecialWeekday (Lun-Jue) |
-| RoomId           | int (FK → Rooms)    | Habitación                                 |
-| SeasonId         | int (FK → Seasons)  | Temporada                                  |
-| IsActive         | bit                 | Estado activo/inactivo                     |
-
-### Reservations (Reservas)
-
-Reservas de los usuarios.
-
-| Columna     | Tipo                             | Descripción               |
-| ----------- | -------------------------------- | ------------------------- |
-| Id          | int (PK)                         | Identificador único       |
-| CheckIn     | date                             | Fecha de entrada          |
-| CheckOut    | date                             | Fecha de salida           |
-| TotalGuests | int                              | Número total de huéspedes |
-| TotalPrice  | decimal(18,2)                    | Precio total calculado    |
-| Status      | int (enum ReservationStatus)     | Estado del flujo          |
-| Notes       | nvarchar(MAX)                    | Notas adicionales         |
-| UserId      | nvarchar(450) (FK → AspNetUsers) | Usuario que reservó       |
-| CreatedAt   | datetime2                        | Fecha de creación         |
-| UpdatedAt   | datetime2                        | Última modificación       |
-
-**Estados del flujo**: Pending (0) → Confirmed (1) → CheckedIn (2) → CheckedOut (3). También: Cancelled (5), NoShow (4).
-
-### ReservationDetails (Detalle de reserva)
-
-Líneas de detalle por habitación reservada.
-
-| Columna       | Tipo                    | Descripción                               |
-| ------------- | ----------------------- | ----------------------------------------- |
-| Id            | int (PK)                | Identificador único                       |
-| ReservationId | int (FK → Reservations) | Reserva padre                             |
-| RoomId        | int (FK → Rooms)        | Habitación reservada                      |
-| PricePerNight | decimal(18,2)           | Precio por noche al momento de la reserva |
-| Subtotal      | decimal(18,2)           | Subtotal de esta línea                    |
-| GuestsInRoom  | int                     | Huéspedes asignados a esta habitación     |
-
----
-
-## 7. Entity Framework Core
-
-### Versión y proveedor
-
-- **EF Core 8.0.25** con proveedor `Microsoft.EntityFrameworkCore.SqlServer`.
-- **Code-First** con migraciones automáticas al iniciar.
-
-### Configuraciones Fluent API
-
-Cada entidad tiene su configuración Fluent API en archivos separados:
-
-- `SiteConfiguration`, `AccommodationConfiguration`, `RoomConfiguration`
-- `SeasonConfiguration`, `RateConfiguration`
-- `ReservationConfiguration`, `ReservationDetailConfiguration`
-- `FavoriteConfiguration`, `ApplicationUserConfiguration`
-
-### Características utilizadas
-
-- **Índices únicos**: Combinación (AccommodationId, RoomNumber), (RoomId, SeasonId, Kind), (UserId, RoomId).
-- **Cascade delete**: Site → Accommodations → Rooms. Reservation → ReservationDetails.
-- **Restrict delete**: Room → ReservationDetails (no se puede eliminar una habitación con reservas).
-- **Shadow properties**: No utilizadas; todas las propiedades son explícitas.
-- **Migraciones**: Registradas manualmente en `__EFMigrationsHistory` por el DataSeeder.
-
-### Patrón Repository
-
-```
-IRepository<T> (interfaz genérica)
-  ├── GetByIdAsync(id)
-  ├── GetAllAsync()
-  ├── FindAsync(predicate)
-  ├── AddAsync(entity)
-  ├── Update(entity)
-  ├── Delete(entity)
-  └── SaveChangesAsync()
-
-IRoomRepository (especializado)
-  ├── GetAvailableRoomsAsync(checkIn, checkOut)
-  ├── GetAvailableRoomsByGuestsAsync(checkIn, checkOut, guests)
-  └── IsRoomAvailableAsync(roomId, checkIn, checkOut)
-
-IRateRepository (especializado)
-  └── CalculateTotalRateAsync(roomId, checkIn, checkOut, guests)
-
-IReservationRepository (especializado)
-  └── HasOverlappingReservationAsync(roomId, checkIn, checkOut, excludeId)
-```
-
----
-
-## 8. ASP.NET Core Identity
-
-### Configuración
-
-| Parámetro                         | Valor                    |
-| --------------------------------- | ------------------------ |
-| **Longitud mínima de contraseña** | 8 caracteres             |
-| **Requiere mayúscula**            | Sí                       |
-| **Requiere minúscula**            | Sí                       |
-| **Requiere dígito**               | Sí                       |
-| **Requiere carácter especial**    | Sí                       |
-| **Bloqueo por intentos fallidos** | 5 intentos → 15 minutos  |
-| **Confirmación de email**         | Configurable por entorno |
-
-### Roles
-
-| Rol              | Permisos                                                   |
-| ---------------- | ---------------------------------------------------------- |
-| **Admin**        | CRUD completo, gestión de reservas, dashboard              |
-| **Receptionist** | Gestión de reservas y check-in/check-out                   |
-| **Guest**        | Consultar disponibilidad, crear reservas, ver mis reservas |
-| **Cliente**      | Igual que Guest (alias para asociados)                     |
-
-### Personalización
-
-- **SpanishIdentityErrorDescriber**: Traduce todos los mensajes de error de Identity al español.
-- **SpanishFluentValidationLanguageManager**: Traduce los mensajes de FluentValidation al español.
-- **ApplicationUser**: Extiende IdentityUser con `FirstName`, `LastName`, `DocumentNumber`, `IsActive`.
-
-### Páginas de Identity personalizadas
-
-- Login (`/Identity/Account/Login`)
-- Registro (`/Identity/Account/Register`)
-- Confirmación de email (`/Identity/Account/ConfirmEmail`)
-- Olvidé contraseña (`/Identity/Account/ForgotPassword`)
-- Restablecer contraseña (`/Identity/Account/ResetPassword`)
-- Reenviar confirmación (`/Identity/Account/ResendEmailConfirmation`)
-
----
-
-## 9. Lógica de Reservas
-
-### Flujo de estados
-
-```
-     ┌──────────┐     ┌───────────┐     ┌───────────┐     ┌────────────┐
-     │ Pending  │ ──→ │ Confirmed │ ──→ │ CheckedIn │ ──→ │ CheckedOut │
-     └──────────┘     └───────────┘     └───────────┘     └────────────┘
-          │                │
-          ▼                ▼
-     ┌───────────┐   ┌───────────┐
-     │ Cancelled │   │  NoShow   │
-     └───────────┘   └───────────┘
-```
-
-### Proceso de creación
-
-1. El usuario busca disponibilidad (sede, fechas, personas).
-2. El sistema ejecuta SP1/SP2 para encontrar habitaciones disponibles.
-3. El usuario selecciona una o más habitaciones.
-4. El sistema ejecuta SP4 para calcular el precio total de cada habitación.
-5. Se verifica overbooking con SP5 + transacción SERIALIZABLE.
-6. Se crea la reserva con estado "Pending".
-7. Se genera un ReservationDetail por cada habitación seleccionada.
-8. Se envía notificación por email al usuario.
-
-### Prevención de overbooking
-
-Se implementa un doble control:
-
-1. **SP5 (`sp_ValidateOverbooking`)**: Verifica en SQL Server si existe solapamiento de fechas para la misma habitación.
-2. **Transacción SERIALIZABLE**: El repositorio envuelve la verificación y creación en una transacción con nivel de aislamiento `SERIALIZABLE`, que bloquea los registros hasta completar la operación. Esto previene condiciones de carrera en escenarios concurrentes.
-
----
-
-## 10. Disponibilidad
-
-### Algoritmo de disponibilidad
-
-Una habitación se considera **disponible** si:
-
-1. `IsActive = 1` (no está desactivada).
-2. No tiene reservas activas (estado ≠ Cancelled) que se solapen con las fechas solicitadas.
-
-### Solapamiento de fechas
-
-Dos reservas se solapan cuando:
-
-```
-ReservaExistente.CheckIn < NuevaReserva.CheckOut
-AND ReservaExistente.CheckOut > NuevaReserva.CheckIn
-```
-
-Esta lógica está implementada tanto en los Stored Procedures como en los repositorios LINQ (fallback).
-
-### Filtro por capacidad
-
-SP2 agrega el filtro `r.MaxGuests >= @Guests` para mostrar solo habitaciones con capacidad suficiente.
-
----
-
-## 11. Motor de Tarificación
-
-### Reglas de negocio FODUN
-
-El motor de tarificación implementa las reglas específicas del Fondo XYZ:
-
-| Concepto                       | Regla                                                                  |
-| ------------------------------ | ---------------------------------------------------------------------- |
-| **Tarifa base**                | Precio por noche para hasta `BaseGuests` personas                      |
-| **Persona adicional**          | `ExtraPersonPrice` por cada huésped adicional sobre `BaseGuests`       |
-| **Tarifa especial Lun-Jue**    | Precio reducido aplicable de lunes a jueves, excepto en alta temporada |
-| **Multiplicador de temporada** | `PriceMultiplier` de la temporada vigente (1.0 = baja, >1.0 = alta)    |
-| **Fallback**                   | Si no hay tarifa configurada, se usa `Room.BasePrice`                  |
-
-### Cálculo día por día
-
-El SP4 itera cada noche del rango `[CheckIn, CheckOut)`:
-
-```
-Para cada noche:
-  1. Determinar si es Lun-Jue
-  2. Buscar tarifa activa (Rate + Season) vigente para esa fecha
-  3. Si es Lun-Jue Y existe tarifa SpecialWeekday Y PriceMultiplier ≤ 1:
-     → Usar tarifa especial (sin multiplicador)
-  4. Si no:
-     → Usar tarifa Standard × PriceMultiplier
-  5. Sumar extras: MAX(0, TotalGuests − BaseGuests) × ExtraPersonPrice
-  6. Acumular en TotalRate
-```
-
-### Ejemplo de cálculo
-
-Reserva de 3 noches (viernes a lunes) para 6 personas:
-
-- Habitación: Tarifa base $70.000/noche para 4 personas, extra $16.000/persona.
-- Temporada baja (PriceMultiplier = 1.0).
-- Tarifa especial Lun-Jue: $27.000/noche para 4 personas, extra $11.000/persona.
-
-| Noche | Día     | Tarifa base   | Extra (2 personas) | Total noche |
-| ----- | ------- | ------------- | ------------------ | ----------- |
-| 1     | Viernes | $70.000 × 1.0 | 2 × $16.000        | $102.000    |
-| 2     | Sábado  | $70.000 × 1.0 | 2 × $16.000        | $102.000    |
-| 3     | Domingo | $70.000 × 1.0 | 2 × $16.000        | $102.000    |
-
-**Total**: $306.000
-
-Si el lunes estuviera incluido: $27.000 + (2 × $11.000) = $49.000 esa noche.
-
----
-
-## 12. Stored Procedures
-
-Se implementaron **6 Stored Procedures** en SQL Server, cubriendo los 4 requeridos por la prueba técnica más 2 auxiliares.
-
-### SP1: `sp_GetAvailableRoomsByDates`
-
-**Requisito**: Encontrar habitaciones disponibles en un rango de fechas.
-
-| Parámetro   | Tipo  | Dirección |
-| ----------- | ----- | --------- |
-| `@CheckIn`  | DATE  | Entrada   |
-| `@CheckOut` | DATE  | Entrada   |
-| Resultado   | Tabla | Salida    |
-
-**Lógica**: Selecciona todas las habitaciones activas cuyo Id no aparezca en ReservationDetails de reservas no canceladas que se solapen con el rango solicitado. Ordena por precio.
-
-### SP2: `sp_GetAvailableRoomsByDatesAndGuests`
-
-**Requisito**: Encontrar habitaciones disponibles por fechas + número de personas.
-
-| Parámetro   | Tipo  | Dirección |
-| ----------- | ----- | --------- |
-| `@CheckIn`  | DATE  | Entrada   |
-| `@CheckOut` | DATE  | Entrada   |
-| `@Guests`   | INT   | Entrada   |
-| Resultado   | Tabla | Salida    |
-
-**Lógica**: Igual que SP1, agregando el filtro `MaxGuests >= @Guests`.
-
-### SP3: `sp_GetRoomRates`
-
-**Requisito**: Ver tarifas según sitio, temporada, personas y alojamiento.
-
-| Parámetro | Tipo  | Dirección |
-| --------- | ----- | --------- |
-| `@RoomId` | INT   | Entrada   |
-| Resultado | Tabla | Salida    |
-
-**Lógica**: JOIN entre Rates, Seasons y Rooms para obtener todas las tarifas configuradas de una habitación con sus temporadas.
-
-### SP4: `sp_CalculateTotalRate`
-
-**Requisito**: Calcular la tarifa a cancelar según sitio, habitaciones, personas, alojamiento y temporada.
-
-| Parámetro      | Tipo          | Dirección |
-| -------------- | ------------- | --------- |
-| `@RoomId`      | INT           | Entrada   |
-| `@CheckIn`     | DATE          | Entrada   |
-| `@CheckOut`    | DATE          | Entrada   |
-| `@TotalGuests` | INT           | Entrada   |
-| `@TotalRate`   | DECIMAL(18,2) | Salida    |
-
-**Lógica**: Motor de tarificación iterativo (día por día). Usa `SET DATEFIRST 1` para que lunes sea día 1. Aplica tarifa especial Lun-Jue cuando PriceMultiplier ≤ 1. Fallback a BasePrice si no hay tarifa configurada. Incluye cálculo de personas extra.
-
-### SP5: `sp_ValidateOverbooking` (auxiliar)
-
-Verifica si una habitación tiene reservas solapadas.
-
-| Parámetro               | Tipo     | Dirección |
-| ----------------------- | -------- | --------- |
-| `@RoomId`               | INT      | Entrada   |
-| `@CheckIn`              | DATE     | Entrada   |
-| `@CheckOut`             | DATE     | Entrada   |
-| `@ExcludeReservationId` | INT NULL | Entrada   |
-| `@IsOverbooked`         | BIT      | Salida    |
-
-### SP6: `sp_GetRatesByCriteria` (auxiliar)
-
-Consulta avanzada de tarifas cruzando múltiples filtros opcionales. Calcula `EffectivePricePerNight` incluyendo multiplicador de temporada y extras por persona.
-
-| Parámetro          | Tipo      | Dirección |
-| ------------------ | --------- | --------- |
-| `@SiteId`          | INT NULL  | Entrada   |
-| `@AccommodationId` | INT NULL  | Entrada   |
-| `@SeasonId`        | INT NULL  | Entrada   |
-| `@Guests`          | INT NULL  | Entrada   |
-| `@CheckIn`         | DATE NULL | Entrada   |
-| `@CheckOut`        | DATE NULL | Entrada   |
-| Resultado          | Tabla     | Salida    |
-
-### Seguridad en SPs
-
-- Todos los parámetros son **tipados** (DATE, INT, DECIMAL), lo que previene SQL Injection.
-- Se usa `SET NOCOUNT ON` para evitar mensajes innecesarios.
-- Los SPs se ejecutan desde EF Core usando `ExecuteSqlRawAsync` con parámetros `SqlParameter`, nunca con concatenación de cadenas.
-
----
-
-## 13. Servicio de Email (SMTP)
-
-### Arquitectura
-
-```
-IEmailService (interfaz)
-  └── EmailService (MailKit) → Conexión SMTP
-
-IEmailTemplateService (interfaz)
-  └── EmailTemplateService → Plantillas HTML
-
-IEmailSender<ApplicationUser> (Identity)
-  └── IdentityEmailSender → Detecta tipo + aplica plantilla + envía
-```
-
-### Configuración
-
-Las credenciales SMTP se configuran mediante variables de entorno (en Docker) o `appsettings.json` (local):
-
-```json
-{
-  "EmailSettings": {
-    "SmtpServer": "smtp.ejemplo.com",
-    "SmtpPort": 587,
-    "SenderName": "Reservas XYZ",
-    "SenderEmail": "correo@ejemplo.com",
-    "Password": "contraseña-aplicación"
+<style>
+  @page {
+    size: A4;
+    margin: 20mm 22mm;
   }
-}
+  @page:first {
+    margin: 0;
+    @top-center { content: none; }
+    @bottom-center { content: none; }
+  }
+
+  :root {
+    --c-text: #1a1a1a;
+    --c-muted: #555;
+    --c-rule: #ccc;
+    --c-accent: #1a3c6e;
+    --c-bg-code: #f5f6f8;
+    --c-tbl-head: #2c3e50;
+    --font: 'Segoe UI', 'Calibri', Arial, sans-serif;
+    --mono: 'Consolas', 'Cascadia Code', 'Courier New', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font);
+    font-size: 10.5pt;
+    line-height: 1.45;
+    color: var(--c-text);
+    orphans: 3;
+    widows: 3;
+  }
+
+  /* ═══════════════════════════════════════════════════════ */
+  /*  PORTADA — CORPORATE WHITEPAPER                        */
+  /* ═══════════════════════════════════════════════════════ */
+
+  .cover {
+    page-break-after: always;
+    width: 210mm;
+    height: 297mm;
+    margin: -20mm -22mm;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+    background: #fff;
+  }
+  .cover-bar {
+    width: 100%;
+    height: 6px;
+    background: var(--c-accent);
+  }
+  .cover-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 38mm 35mm 30mm 35mm;
+  }
+  .cover-label {
+    font-size: 9pt;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--c-accent);
+    margin-bottom: 12mm;
+  }
+  .cover-title {
+    font-size: 28pt;
+    font-weight: 700;
+    color: var(--c-text);
+    line-height: 1.15;
+    margin: 0 0 4mm 0;
+    border: none !important;
+    border-bottom: none !important;
+    padding: 0;
+  }
+  .cover-sub {
+    font-size: 14pt;
+    font-weight: 400;
+    color: var(--c-muted);
+    margin: 0 0 20mm 0;
+  }
+  .cover-rule {
+    width: 40mm;
+    height: 1.5px;
+    background: var(--c-accent);
+    border: none;
+    margin: 0 0 10mm 0;
+  }
+  .cover-meta {
+    font-size: 10pt;
+    line-height: 1.8;
+    color: var(--c-muted);
+  }
+  .cover-meta strong { color: var(--c-text); font-weight: 600; }
+  .cover-stack {
+    margin-top: 10mm;
+    font-size: 9pt;
+    color: var(--c-muted);
+    line-height: 1.6;
+  }
+  .cover-footer {
+    padding: 8mm 35mm;
+    border-top: 1px solid #e0e0e0;
+    font-size: 7.5pt;
+    color: #aaa;
+    text-align: center;
+    letter-spacing: 0.5px;
+  }
+
+  /* ═══════════════════════════════════════════════════════ */
+  /*  TABLA DE CONTENIDO — BOOK STYLE                       */
+  /* ═══════════════════════════════════════════════════════ */
+
+  .toc {
+    page-break-after: always;
+  }
+  .toc h1 {
+    font-size: 16pt;
+    border-bottom: 2px solid var(--c-accent);
+    padding-bottom: 4mm;
+    margin-bottom: 8mm;
+    color: var(--c-accent);
+  }
+  .toc-entry {
+    display: flex;
+    align-items: baseline;
+    font-size: 10.5pt;
+    line-height: 2.2;
+    color: var(--c-text);
+    text-decoration: none;
+  }
+  .toc-num {
+    font-weight: 600;
+    min-width: 8mm;
+    color: var(--c-accent);
+  }
+  .toc-title {
+    flex-shrink: 0;
+  }
+  .toc-dots {
+    flex: 1;
+    border-bottom: 1px dotted #bbb;
+    margin: 0 2mm;
+    min-width: 10mm;
+  }
+  .toc-page {
+    flex-shrink: 0;
+    font-weight: 600;
+    color: var(--c-accent);
+    min-width: 6mm;
+    text-align: right;
+  }
+
+  /* ═══════════════════════════════════════════════════════ */
+  /*  HEADINGS                                              */
+  /* ═══════════════════════════════════════════════════════ */
+
+  h1 {
+    font-size: 16pt;
+    font-weight: 700;
+    color: var(--c-accent);
+    border-bottom: 2px solid var(--c-accent);
+    padding-bottom: 3mm;
+    margin: 10mm 0 5mm 0;
+    page-break-after: avoid;
+  }
+  h2 {
+    font-size: 13pt;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 7mm 0 3mm 0;
+    page-break-after: avoid;
+  }
+  h3 {
+    font-size: 11pt;
+    font-weight: 600;
+    color: #374151;
+    margin: 5mm 0 2mm 0;
+    page-break-after: avoid;
+  }
+
+  /* ═══════════════════════════════════════════════════════ */
+  /*  TEXT                                                  */
+  /* ═══════════════════════════════════════════════════════ */
+
+  p {
+    margin: 0 0 2.5mm 0;
+    text-align: justify;
+    hyphens: auto;
+  }
+  ul, ol { margin: 0 0 3mm 0; padding-left: 6mm; }
+  li { margin-bottom: 1mm; }
+  strong { font-weight: 600; }
+
+  /* ═══════════════════════════════════════════════════════ */
+  /*  TABLES — PRINT STYLE                                  */
+  /* ═══════════════════════════════════════════════════════ */
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 3mm 0 4mm 0;
+    font-size: 9pt;
+    page-break-inside: avoid;
+  }
+  thead th {
+    background: var(--c-tbl-head);
+    color: #fff;
+    font-weight: 600;
+    text-align: left;
+    padding: 2mm 3mm;
+    border: 0.5pt solid #1a2a3a;
+    font-size: 8.5pt;
+  }
+  tbody td {
+    padding: 1.5mm 3mm;
+    border: 0.5pt solid #d0d0d0;
+    vertical-align: top;
+  }
+  tbody tr:nth-child(even) { background: #f7f8fa; }
+
+  /* ═══════════════════════════════════════════════════════ */
+  /*  IMAGES — PRINT EDITORIAL                              */
+  /* ═══════════════════════════════════════════════════════ */
+
+  .fig {
+    page-break-inside: avoid;
+    margin: 4mm 0 5mm 0;
+    text-align: center;
+  }
+  .fig img {
+    max-width: 88%;
+    max-height: 36vh;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    border: 0.5pt solid #d0d0d0;
+  }
+  .fig-caption {
+    font-size: 9pt;
+    color: var(--c-muted);
+    font-style: italic;
+    text-align: center;
+    margin-top: 2mm;
+    line-height: 1.3;
+  }
+
+  /* 2-up gallery for compact evidence */
+  .fig-row {
+    display: flex;
+    gap: 4mm;
+    page-break-inside: avoid;
+    margin: 4mm 0 5mm 0;
+  }
+  .fig-row .fig {
+    flex: 1;
+    margin: 0;
+  }
+  .fig-row .fig img {
+    max-width: 100%;
+    max-height: 30vh;
+  }
+
+  img {
+    max-width: 88%;
+    max-height: 36vh;
+    height: auto;
+    display: block;
+    margin: 2mm auto;
+    border: 0.5pt solid #d0d0d0;
+  }
+
+  /* ═══════════════════════════════════════════════════════ */
+  /*  CAPTIONS (em after image / table)                     */
+  /* ═══════════════════════════════════════════════════════ */
+
+  p > em:only-child {
+    display: block;
+    font-size: 9pt;
+    color: var(--c-muted);
+    text-align: center;
+    margin: 1mm 0 4mm 0;
+    font-style: italic;
+    line-height: 1.3;
+  }
+
+  /* Standalone image + caption pairs: keep together on page */
+  p:has(> img) {
+    page-break-inside: avoid;
+    text-align: center;
+    margin: 4mm 0 1mm 0;
+  }
+  p:has(> img) + p {
+    page-break-before: avoid;
+  }
+
+  /* ═══════════════════════════════════════════════════════ */
+  /*  CODE BLOCKS                                           */
+  /* ═══════════════════════════════════════════════════════ */
+
+  pre {
+    background: var(--c-bg-code);
+    border: 0.5pt solid #ddd;
+    border-left: 3pt solid var(--c-accent);
+    padding: 3mm 4mm;
+    font-size: 8pt;
+    line-height: 1.5;
+    overflow: hidden;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    page-break-inside: avoid;
+    margin: 2mm 0 3mm 0;
+  }
+  code {
+    font-family: var(--mono);
+    font-size: 8.5pt;
+  }
+  p code, li code, td code {
+    background: #eef0f3;
+    padding: 0.3mm 1.5mm;
+    font-size: 8pt;
+    color: #c0392b;
+  }
+
+  /* ═══════════════════════════════════════════════════════ */
+  /*  HR                                                    */
+  /* ═══════════════════════════════════════════════════════ */
+
+  hr {
+    border: none;
+    height: 0.5pt;
+    background: var(--c-rule);
+    margin: 5mm 0;
+  }
+
+  /* ═══════════════════════════════════════════════════════ */
+  /*  BLOCKQUOTE — NOTE BOX                                 */
+  /* ═══════════════════════════════════════════════════════ */
+
+  blockquote {
+    background: #f0f4f8;
+    border-left: 3pt solid var(--c-accent);
+    padding: 2.5mm 4mm;
+    margin: 2mm 0 3mm 0;
+    font-size: 9.5pt;
+    color: #2c3e50;
+    page-break-inside: avoid;
+  }
+  blockquote p { margin: 0; text-align: left; }
+
+  /* ═══════════════════════════════════════════════════════ */
+  /*  PAGE BREAKS                                           */
+  /* ═══════════════════════════════════════════════════════ */
+
+  .pb { page-break-after: always; }
+</style>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!--                     PORTADA                               -->
+<!-- ══════════════════════════════════════════════════════════ -->
+
+<div class="cover">
+  <div class="cover-bar"></div>
+  <div class="cover-body">
+    <div class="cover-label">Prueba Técnica · Analista Desarrollador .NET</div>
+    <h1 class="cover-title">Sistema de Reservas XYZ</h1>
+    <p class="cover-sub">Documento Técnico — Sistema de Gestión y Reservas Hoteleras</p>
+    <hr class="cover-rule">
+    <div class="cover-meta">
+      <strong>Autor</strong> &emsp; Juan Campo<br>
+      <strong>Cargo</strong> &emsp; Analista Desarrollador .NET<br>
+      <strong>Versión</strong> &emsp; 1.0<br>
+      <strong>Fecha</strong> &emsp; Mayo 2026<br>
+      <strong>Ciudad</strong> &emsp; Colombia
+    </div>
+    <div class="cover-stack">
+      ASP.NET Core 8.0 MVC &nbsp;·&nbsp; Entity Framework Core 8.0 &nbsp;·&nbsp; SQL Server 2022<br>
+      ASP.NET Core Identity &nbsp;·&nbsp; MailKit SMTP &nbsp;·&nbsp; Docker &nbsp;·&nbsp; Nginx &nbsp;·&nbsp; Let's Encrypt<br>
+      Tailwind CSS v4 &nbsp;·&nbsp; FluentValidation &nbsp;·&nbsp; AutoMapper
+    </div>
+  </div>
+  <div class="cover-footer">DOCUMENTO CONFIDENCIAL — SOLO PARA EVALUACIÓN TÉCNICA — FONDO DE EMPLEADOS XYZ (FODUN)</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!--               TABLA DE CONTENIDO                          -->
+<!-- ══════════════════════════════════════════════════════════ -->
+
+<div class="toc">
+
+<h1>Tabla de Contenido</h1>
+
+<a class="toc-entry" href="#1-introducción"><span class="toc-num">1</span><span class="toc-title">Introducción</span><span class="toc-dots"></span><span class="toc-page">3</span></a>
+<a class="toc-entry" href="#2-arquitectura-del-proyecto"><span class="toc-num">2</span><span class="toc-title">Arquitectura del Proyecto</span><span class="toc-dots"></span><span class="toc-page">5</span></a>
+<a class="toc-entry" href="#3-tecnologías-utilizadas"><span class="toc-num">3</span><span class="toc-title">Tecnologías Utilizadas</span><span class="toc-dots"></span><span class="toc-page">7</span></a>
+<a class="toc-entry" href="#4-modelo-relacional"><span class="toc-num">4</span><span class="toc-title">Modelo Relacional</span><span class="toc-dots"></span><span class="toc-page">9</span></a>
+<a class="toc-entry" href="#5-base-de-datos"><span class="toc-num">5</span><span class="toc-title">Base de Datos</span><span class="toc-dots"></span><span class="toc-page">11</span></a>
+<a class="toc-entry" href="#6-stored-procedures"><span class="toc-num">6</span><span class="toc-title">Stored Procedures</span><span class="toc-dots"></span><span class="toc-page">13</span></a>
+<a class="toc-entry" href="#7-identity-y-seguridad"><span class="toc-num">7</span><span class="toc-title">Identity y Seguridad</span><span class="toc-dots"></span><span class="toc-page">17</span></a>
+<a class="toc-entry" href="#8-flujo-funcional"><span class="toc-num">8</span><span class="toc-title">Flujo Funcional</span><span class="toc-dots"></span><span class="toc-page">19</span></a>
+<a class="toc-entry" href="#9-servicio-de-email-smtp"><span class="toc-num">9</span><span class="toc-title">Servicio de Email (SMTP)</span><span class="toc-dots"></span><span class="toc-page">24</span></a>
+<a class="toc-entry" href="#10-docker-y-contenedorización"><span class="toc-num">10</span><span class="toc-title">Docker y Contenedorización</span><span class="toc-dots"></span><span class="toc-page">25</span></a>
+<a class="toc-entry" href="#11-despliegue-en-vps"><span class="toc-num">11</span><span class="toc-title">Despliegue en VPS</span><span class="toc-dots"></span><span class="toc-page">27</span></a>
+<a class="toc-entry" href="#12-instrucciones-de-ejecución"><span class="toc-num">12</span><span class="toc-title">Instrucciones de Ejecución</span><span class="toc-dots"></span><span class="toc-page">29</span></a>
+<a class="toc-entry" href="#13-conclusiones"><span class="toc-num">13</span><span class="toc-title">Conclusiones</span><span class="toc-dots"></span><span class="toc-page">31</span></a>
+
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!--                 1. INTRODUCCIÓN                           -->
+<!-- ══════════════════════════════════════════════════════════ -->
+
+# 1. Introducción
+
+## 1.1 Objetivo
+
+Desarrollar un sistema web completo de gestión de reservas hoteleras para el Fondo de Empleados XYZ (FODUN), que permita a los asociados consultar disponibilidad de sedes recreativas y apartamentos, visualizar tarifas según temporada y número de personas, y realizar reservas en línea.
+
+## 1.2 Contexto del negocio
+
+El Fondo XYZ cuenta con 8 sedes distribuidas en diferentes ciudades de Colombia:
+
+| # | Sede | Ciudad | Capacidad |
+|---|------|--------|-----------|
+| 1 | Villeta | Villeta | 32 personas |
+| 2 | El Placer | Fusagasugá | 34 personas |
+| 3 | Gonzalo Morante | Chinchiná | 30 personas |
+| 4 | Tablones | Palmira | 24 personas |
+| 5 | Manguruma | Santa Fe de Antioquia | 46 personas |
+| 6 | Federmán | Bogotá | 8 personas |
+| 7 | Suramericana | Medellín | 9 personas |
+| 8 | El Rodadero | Santa Marta | 20 personas |
+
+*Tabla 1. Sedes recreativas del Fondo de Empleados XYZ.*
+
+## 1.3 Necesidad
+
+Los asociados requieren un sistema web para:
+
+- Consultar la disponibilidad de alojamientos según fechas de viaje.
+- Visualizar tarifas por sitio, temporada, número de personas y tipo de alojamiento.
+- Calcular el costo total de su estadía.
+- Realizar y gestionar reservas de forma autónoma.
+
+## 1.4 Pantalla principal
+
+![Pantalla principal del sistema](docs/screenshots/01-home.png)
+
+*Figura 1. Landing page del sistema ReservasXYZ con las 8 sedes disponibles, tarifas de referencia y accesos a registro y login.*
+
+<div class="pb"></div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!--            2. ARQUITECTURA DEL PROYECTO                   -->
+<!-- ══════════════════════════════════════════════════════════ -->
+
+# 2. Arquitectura del Proyecto
+
+## 2.1 Patrón arquitectónico
+
+El proyecto implementa **Clean Architecture** con separación en cuatro capas independientes, siguiendo los principios SOLID y el patrón de inversión de dependencias.
+
+## 2.2 Diagrama de capas
+
+```
+ ┌──────────────────────────────────────────────────────┐
+ │                   ReservasXYZ.Web                     │
+ │  Controllers MVC · Razor Views · Identity Pages      │
+ │  wwwroot (CSS/JS) · DI Configuration · Middleware    │
+ ├──────────────────────────────────────────────────────┤
+ │                ReservasXYZ.Application                │
+ │     DTOs · Servicios · Validadores · AutoMapper      │
+ ├──────────────────────────────────────────────────────┤
+ │               ReservasXYZ.Infrastructure             │
+ │  DbContext · Repositorios · Email · Seed · SPs · DI │
+ ├──────────────────────────────────────────────────────┤
+ │                  ReservasXYZ.Domain                   │
+ │           Entidades · Enums · Interfaces             │
+ └──────────────────────────────────────────────────────┘
 ```
 
-### Protocolos soportados
-
-| Puerto | Protocolo | Uso                        |
-| ------ | --------- | -------------------------- |
-| 465    | SSL       | Conexión directa con SSL   |
-| 587    | STARTTLS  | Conexión con upgrade a TLS |
-| Otro   | Auto      | Detección automática       |
-
-### Tipos de email
-
-| Tipo                           | Plantilla               | Descripción                        |
-| ------------------------------ | ----------------------- | ---------------------------------- |
-| Confirmación de email          | `ConfirmEmailTemplate`  | Enlace para verificar cuenta       |
-| Restablecimiento de contraseña | `ResetPasswordTemplate` | Enlace para crear nueva contraseña |
-| Notificación de reserva        | `ReservationTemplate`   | Confirmación de reserva creada     |
-
-### Seguridad SMTP
-
-- Las credenciales SMTP **no están en el código fuente** ni en el repositorio Git.
-- En desarrollo: se usa `appsettings.Development.json` (excluido de Git vía `.gitignore`).
-- En producción (Docker): se inyectan como variables de entorno desde `.env`.
-- Los enlaces en emails se codifican con `HtmlEncoder.Default.Encode()` para prevenir XSS.
-
----
-
-## 14. Docker y Contenedores
-
-### Dockerfile (Multi-stage build)
+## 2.3 Flujo de dependencias
 
 ```
-Etapa 1: Build (SDK 8.0)
-  ├── Restore de paquetes NuGet
-  ├── Instalación de Node.js 20 (NodeSource)
-  ├── npm ci + npm run css:build (Tailwind CSS)
-  └── dotnet publish -c Release
-
-Etapa 2: Runtime (aspnet:8.0)
-  ├── Copia de artefactos publicados
-  ├── Puerto 5000
-  └── Entrypoint: dotnet ReservasXYZ.Web.dll
+Web ──→ Application ──→ Domain ←── Infrastructure
 ```
 
-### Docker Compose
+- **Domain** no depende de ninguna otra capa (capa pura de negocio).
+- **Application** depende exclusivamente de Domain.
+- **Infrastructure** implementa las interfaces definidas en Domain.
+- **Web** orquesta todo a través de inyección de dependencias.
 
-| Servicio  | Imagen                   | Puertos | Volúmenes                            | Dependencias        |
-| --------- | ------------------------ | ------- | ------------------------------------ | ------------------- |
-| sqlserver | mssql/server:2022-latest | 1433    | sqldata                              | —                   |
-| web       | Build local              | 5000    | —                                    | sqlserver (healthy) |
-| nginx     | nginx:alpine             | 80, 443 | nginx.conf, certbot-etc, certbot-var | web                 |
-| certbot   | certbot/certbot          | —       | certbot-etc, certbot-var             | nginx               |
+## 2.4 Responsabilidades por capa
 
-### Health checks
+| Capa | Proyecto | Responsabilidad |
+|------|----------|----------------|
+| Presentación | `ReservasXYZ.Web` | Controllers MVC, Razor Views, Identity Pages, middleware, DI, wwwroot |
+| Aplicación | `ReservasXYZ.Application` | DTOs, servicios de aplicación, validadores FluentValidation, AutoMapper |
+| Infraestructura | `ReservasXYZ.Infrastructure` | DbContext, repositorios, email (MailKit), DataSeeder, Fluent API, Identity |
+| Dominio | `ReservasXYZ.Domain` | Entidades de negocio, enums, interfaces de repositorio |
 
-SQL Server tiene un healthcheck con:
+*Tabla 2. Responsabilidades por capa de la arquitectura Clean Architecture.*
 
-- Dual path fallback (`/opt/mssql-tools18/` o `/opt/mssql-tools/`).
-- Intervalo: 15s, timeout: 10s, retries: 15, start_period: 60s.
+## 2.5 Estructura del proyecto
 
-### Restart policy
+```
+ReservasXYZ.sln
+├── ReservasXYZ.Domain/
+│   ├── Entities/          → Site, Accommodation, Room, Season, Rate,
+│   │                        Reservation, ReservationDetail, Favorite
+│   ├── Enums/             → RoomType, ReservationStatus, RateKind
+│   └── Interfaces/        → IRepository<T>, IRoomRepository, IRateRepository
+│
+├── ReservasXYZ.Application/
+│   ├── DTOs/              → SiteDtos, RoomDtos, ReservationDtos, SeasonRateDtos
+│   ├── Interfaces/        → ISiteService, IRoomService, IReservationService
+│   ├── Services/          → SiteService, RoomService, ReservationService
+│   ├── Validators/        → FluentValidation por DTO
+│   └── Mappings/          → AutoMapper MappingProfile
+│
+├── ReservasXYZ.Infrastructure/
+│   ├── Data/              → DbContext, Config, Repositories, Seed
+│   ├── Email/             → EmailService, EmailTemplateService
+│   ├── Identity/          → SpanishIdentityErrorDescriber
+│   ├── Services/          → DashboardService, GuestPortalService
+│   └── StoredProcedures/  → StoredProcedures.sql (6 SPs)
+│
+├── ReservasXYZ.Web/
+│   ├── Controllers/       → CRUD Controllers + API
+│   ├── Areas/Identity/    → Login, Register, ForgotPassword
+│   ├── Views/             → Razor Views + Shared layout
+│   └── wwwroot/           → CSS (Tailwind), JS, imágenes
+│
+├── database/              → Database.sql, SeedCatalog.sql
+├── Dockerfile             → Multi-stage build
+└── docker-compose.yml     → 4 servicios
+```
 
-Todos los servicios usan `restart: unless-stopped` para reinicio automático.
+<div class="pb"></div>
 
----
+<!-- ══════════════════════════════════════════════════════════ -->
+<!--            3. TECNOLOGÍAS UTILIZADAS                      -->
+<!-- ══════════════════════════════════════════════════════════ -->
 
-## 15. Despliegue en VPS
+# 3. Tecnologías Utilizadas
 
-### Infraestructura
+## 3.1 Stack tecnológico
 
-| Componente        | Detalle                      |
-| ----------------- | ---------------------------- |
-| Proveedor         | Google Cloud Platform        |
-| Tipo de instancia | e2-medium (2 vCPU, 4 GB RAM) |
-| Sistema operativo | Ubuntu 22.04 LTS             |
-| Almacenamiento    | 40 GB SSD                    |
-| IP estática       | Asignada                     |
-| Dominio           | Gestionado en Hostinger      |
-| SSL               | Let's Encrypt (Certbot)      |
+| Tecnología | Versión | Propósito |
+|-----------|---------|-----------|
+| .NET SDK | 8.0 | Runtime y compilación |
+| ASP.NET Core MVC | 8.0 | Framework web |
+| Razor Views / Pages | 8.0 | Motor de vistas server-side |
+| Entity Framework Core | 8.0.25 | ORM y migraciones |
+| SQL Server | 2022 Express | Motor de base de datos |
+| ASP.NET Core Identity | 8.0.25 | Autenticación y autorización |
+| AutoMapper | 13.x | Mapeo entidades ↔ DTOs |
+| FluentValidation | 11.x | Validación declarativa |
+| MailKit | 4.x | Cliente SMTP |
+| Tailwind CSS | 4.3.0 | Framework CSS |
+| Node.js | 20+ | Build de Tailwind CSS |
+| Docker | 29.x | Contenedores |
+| Docker Compose | v2 | Orquestación |
+| Nginx | Alpine | Reverse proxy + SSL |
+| Certbot | Latest | Certificados Let's Encrypt |
 
-### Proceso de despliegue
+*Tabla 3. Stack tecnológico del sistema ReservasXYZ.*
 
-1. Clonar repositorio en el VPS.
-2. Copiar `.env.example` a `.env` y configurar credenciales.
-3. Configurar `deploy/nginx.conf` con el dominio.
-4. Ejecutar `docker compose up -d --build`.
-5. Obtener certificado SSL con Certbot.
-6. Activar bloque HTTPS en nginx.conf.
-7. Reiniciar nginx.
+## 3.2 Patrones de diseño
 
-### Seguridad del VPS
+| Patrón | Implementación |
+|--------|---------------|
+| Repository Pattern | `IRepository<T>` genérico + repositorios especializados |
+| Unit of Work | `ApplicationDbContext.SaveChangesAsync()` |
+| DTO Pattern | Objetos separados para Create, Update y View |
+| Dependency Injection | Contenedor nativo de ASP.NET Core |
+| Strategy Pattern | Motor de tarificación con Kind (Standard/SpecialWeekday) |
+| Template Method | EmailTemplateService para tipos de email |
+| Soft Delete | `IsActive = false` en lugar de eliminar registros |
 
-- Acceso SSH por clave ED25519 (sin contraseña).
-- Firewall: solo puertos 22, 80, 443.
-- Usuario `deploy` no-root.
-- Certificados SSL renovados automáticamente cada 6 horas.
-- HTTP redirige a HTTPS (301).
+*Tabla 4. Patrones de diseño implementados.*
 
----
+<div class="pb"></div>
 
-## 16. Seguridad
+<!-- ══════════════════════════════════════════════════════════ -->
+<!--              4. MODELO RELACIONAL                         -->
+<!-- ══════════════════════════════════════════════════════════ -->
 
-### Resumen de controles implementados
+# 4. Modelo Relacional
 
-| Vulnerabilidad OWASP               | Control                   | Implementación                                                        |
-| ---------------------------------- | ------------------------- | --------------------------------------------------------------------- |
-| **A01: Broken Access Control**     | Autorización por roles    | `[Authorize(Roles = "Admin")]`, verificación de propiedad de reservas |
-| **A02: Cryptographic Failures**    | Hashing de contraseñas    | ASP.NET Identity (PBKDF2 con salt)                                    |
-| **A03: Injection**                 | Parámetros tipados        | EF Core parametrizado, SPs con SqlParameter                           |
-| **A04: Insecure Design**           | Transacción SERIALIZABLE  | Prevención de overbooking en reservas concurrentes                    |
-| **A05: Security Misconfiguration** | Variables de entorno      | Secrets en .env (no en código), .gitignore configurado                |
-| **A06: Vulnerable Components**     | Dependencias actualizadas | NuGet packages 8.0.25                                                 |
-| **A07: Auth Failures**             | Bloqueo de cuenta         | 5 intentos → 15 min lockout                                           |
-| **A08: Data Integrity**            | Anti-forgery tokens       | `[ValidateAntiForgeryToken]` en todos los POST                        |
-| **A09: Logging Failures**          | Logging estructurado      | Microsoft.Extensions.Logging                                          |
-| **A10: SSRF**                      | No aplica                 | No hay llamadas HTTP a URLs externas definidas por usuario            |
+## 4.1 Entidades del dominio
 
-### Gestión de secretos
+```
+Sites (Sedes)
+  └── Accommodations (Alojamientos)
+        └── Rooms (Habitaciones)
+              ├── Rates (Tarifas) ←─── Seasons (Temporadas)
+              ├── ReservationDetails ←─ Reservations ← ApplicationUser
+              └── Favorites ←────────── ApplicationUser
+```
 
-| Secreto                        | Ubicación                                                | Expuesto en Git         |
-| ------------------------------ | -------------------------------------------------------- | ----------------------- |
-| Contraseña SMTP                | `.env` (Docker) / `appsettings.Development.json` (local) | ❌ No                   |
-| Password SA SQL Server         | `.env` (Docker)                                          | ❌ No                   |
-| Connection string producción   | Variable de entorno Docker                               | ❌ No                   |
-| `appsettings.Development.json` | Local solamente                                          | ❌ No (en `.gitignore`) |
-| `appsettings.json`             | Git                                                      | ✅ Solo placeholders    |
-| `appsettings.Production.json`  | Git                                                      | ✅ Solo placeholders    |
-| `.env.example`                 | Git                                                      | ✅ Solo placeholders    |
+## 4.2 Relaciones
 
----
+| Relación | Tipo | FK | Descripción |
+|----------|------|----|-------------|
+| Site → Accommodation | 1:N | `SiteId` | Una sede tiene múltiples alojamientos |
+| Accommodation → Room | 1:N | `AccommodationId` | Un alojamiento tiene múltiples habitaciones |
+| Room → Rate | 1:N | `RoomId` | Una habitación tiene tarifas por temporada |
+| Season → Rate | 1:N | `SeasonId` | Una temporada define tarifas múltiples |
+| User → Reservation | 1:N | `UserId` | Un usuario tiene múltiples reservas |
+| Reservation → Detail | 1:N | `ReservationId` | Una reserva incluye múltiples habitaciones |
+| Room → Detail | 1:N | `RoomId` | Una habitación en múltiples reservas |
+| User → Favorite | 1:N | `UserId` | Favoritos por usuario |
+| Room → Favorite | 1:N | `RoomId` | Habitaciones marcadas |
 
-## 17. Tecnologías y Librerías
+*Tabla 5. Relaciones entre entidades del modelo de datos.*
 
-| Librería                                            | Versión | Propósito                           |
-| --------------------------------------------------- | ------- | ----------------------------------- |
-| Microsoft.AspNetCore (SDK)                          | 8.0     | Framework web MVC                   |
-| Microsoft.EntityFrameworkCore                       | 8.0.25  | ORM                                 |
-| Microsoft.EntityFrameworkCore.SqlServer             | 8.0.25  | Proveedor SQL Server                |
-| Microsoft.AspNetCore.Identity                       | 8.0.25  | Autenticación y autorización        |
-| Microsoft.AspNetCore.Identity.UI                    | 8.0.25  | Páginas de Identity predeterminadas |
-| AutoMapper                                          | 13.x    | Mapeo entidades ↔ DTOs              |
-| AutoMapper.Extensions.Microsoft.DependencyInjection | 13.x    | Integración con DI                  |
-| FluentValidation                                    | 11.x    | Validación declarativa              |
-| FluentValidation.AspNetCore                         | 11.x    | Integración con ASP.NET Core        |
-| MailKit                                             | 4.x     | Cliente SMTP                        |
-| MimeKit                                             | 4.x     | Construcción de mensajes email      |
-| Tailwind CSS                                        | 4.3.0   | Framework CSS utility-first         |
-| @tailwindcss/cli                                    | 4.x     | CLI para compilación de CSS         |
+## 4.3 Índices
 
----
+| Tabla | Índice | Tipo | Columnas |
+|-------|--------|------|----------|
+| Rooms | `IX_Rooms_Accommodation_Number` | UNIQUE | (AccommodationId, RoomNumber) |
+| Rates | `IX_Rates_Room_Season_Kind` | UNIQUE | (RoomId, SeasonId, Kind) |
+| Favorites | `IX_Favorites_User_Room` | UNIQUE | (UserId, RoomId) |
+| ReservationDetails | `IX_ReservationDetail_Room` | INDEX | (RoomId) |
 
-## 18. Instrucciones de Ejecución
+*Tabla 6. Índices para optimización de consultas.*
 
-### Opción A: Ejecución local
+## 4.4 Constraints de integridad
 
-**Requisitos**: .NET SDK 8.0, SQL Server (LocalDB o instancia), Node.js 20+.
+- **CASCADE DELETE**: Site → Accommodations → Rooms.
+- **RESTRICT DELETE**: Room → ReservationDetails.
+- **SOFT DELETE**: `IsActive` flag en todas las entidades.
+- **CHECK**: `CheckOut > CheckIn` validado en capa de aplicación.
+
+<div class="pb"></div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!--                5. BASE DE DATOS                           -->
+<!-- ══════════════════════════════════════════════════════════ -->
+
+# 5. Base de Datos
+
+## 5.1 Diseño
+
+Base de datos normalizada (3NF). **14 tablas** en total: 9 de dominio + 5 de Identity.
+
+**Dominio:** Sites, Accommodations, Rooms, Seasons, Rates, Reservations, ReservationDetails, Favorites, ApplicationUser.
+
+**Identity:** AspNetUsers, AspNetRoles, AspNetUserRoles, AspNetUserClaims, AspNetUserTokens.
+
+## 5.2 Estrategia de reservas
+
+1. `Reservation` — entidad padre con datos generales (fechas, usuario, total, estado).
+2. `ReservationDetail` — habitación individual dentro de la reserva.
+3. Precio calculado y almacenado al crear (snapshot de precio).
+4. Flujo: `Pending → Confirmed → CheckedIn → CheckedOut`.
+
+## 5.3 Prevención de overbooking
+
+Doble control implementado:
+
+1. **SQL**: SP `sp_ValidateOverbooking` verifica solapamiento de fechas.
+2. **Aplicación**: Transacción `SERIALIZABLE` que bloquea registros durante verificación y creación.
+
+```csharp
+using var transaction = await _context.Database
+    .BeginTransactionAsync(IsolationLevel.Serializable);
+// 1. Verificar solapamiento → 2. Crear reserva → 3. Commit/Rollback
+```
+
+## 5.4 Catálogo FODUN
+
+Script `SeedCatalog.sql` idempotente que carga: 3 temporadas, 8 sedes, 10 alojamientos, 54 habitaciones y tarifas completas con reglas de BaseGuests, ExtraPersonPrice y SpecialWeekday.
+
+<div class="pb"></div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!--              6. STORED PROCEDURES                         -->
+<!-- ══════════════════════════════════════════════════════════ -->
+
+# 6. Stored Procedures
+
+Se implementaron **6 Stored Procedures** — 4 requeridos + 2 auxiliares.
+
+## 6.1 SP1 — sp_GetAvailableRoomsByDates
+
+**Propósito:** Habitaciones disponibles en un rango de fechas.
+
+| Parámetro | Tipo | Dir. | Descripción |
+|-----------|------|------|-------------|
+| `@CheckIn` | DATE | IN | Fecha de entrada |
+| `@CheckOut` | DATE | IN | Fecha de salida |
+
+*Tabla 7. Parámetros de sp_GetAvailableRoomsByDates.*
+
+Selecciona habitaciones activas sin reservas solapadas. Condición: `CheckIn < @CheckOut AND CheckOut > @CheckIn`.
+
+```sql
+EXEC sp_GetAvailableRoomsByDates
+    @CheckIn = '2026-06-01', @CheckOut = '2026-06-05';
+```
+
+## 6.2 SP2 — sp_GetAvailableRoomsByDatesAndGuests
+
+**Propósito:** Disponibilidad por fechas + capacidad mínima.
+
+| Parámetro | Tipo | Dir. | Descripción |
+|-----------|------|------|-------------|
+| `@CheckIn` | DATE | IN | Fecha de entrada |
+| `@CheckOut` | DATE | IN | Fecha de salida |
+| `@Guests` | INT | IN | Número de huéspedes |
+
+*Tabla 8. Parámetros de sp_GetAvailableRoomsByDatesAndGuests.*
+
+Misma lógica que SP1 + filtro `MaxGuests >= @Guests`.
+
+## 6.3 SP3 — sp_GetRoomRates
+
+**Propósito:** Tarifas configuradas para una habitación.
+
+| Parámetro | Tipo | Dir. | Descripción |
+|-----------|------|------|-------------|
+| `@RoomId` | INT | IN | ID de la habitación |
+
+*Tabla 9. Parámetros de sp_GetRoomRates.*
+
+## 6.4 SP4 — sp_CalculateTotalRate
+
+**Propósito:** Tarifa total de una estadía aplicando reglas FODUN.
+
+| Parámetro | Tipo | Dir. | Descripción |
+|-----------|------|------|-------------|
+| `@RoomId` | INT | IN | ID de la habitación |
+| `@CheckIn` | DATE | IN | Fecha de entrada |
+| `@CheckOut` | DATE | IN | Fecha de salida |
+| `@TotalGuests` | INT | IN | Número de huéspedes |
+| `@TotalRate` | DECIMAL(18,2) | OUT | Tarifa calculada |
+
+*Tabla 10. Parámetros de sp_CalculateTotalRate.*
+
+**Motor de tarificación:**
+
+1. `SET DATEFIRST 1` — lunes = día 1.
+2. Itera cada noche del rango `[CheckIn, CheckOut)`.
+3. Para cada noche: determina si es Lun-Jue, busca tarifa activa vigente.
+4. Si Lun-Jue **y** existe `SpecialWeekday` **y** `PriceMultiplier ≤ 1`: usa tarifa especial.
+5. Si no: usa Standard × Multiplier.
+6. Suma extras: `MAX(0, TotalGuests − BaseGuests) × ExtraPersonPrice`.
+7. Fallback a `Room.BasePrice` si no hay tarifa configurada.
+
+```sql
+DECLARE @Total DECIMAL(18,2);
+EXEC sp_CalculateTotalRate @RoomId=1, @CheckIn='2026-06-01',
+    @CheckOut='2026-06-04', @TotalGuests=6, @TotalRate=@Total OUTPUT;
+SELECT @Total AS TarifaTotal;
+```
+
+**Ejemplo** — 3 noches, 6 personas, temporada baja, Villeta:
+
+| Noche | Día | Tarifa | Extra (2 pers) | Total |
+|-------|-----|--------|----------------|-------|
+| 1 | Lunes | $27.000 | 2 × $11.000 | $49.000 |
+| 2 | Martes | $27.000 | 2 × $11.000 | $49.000 |
+| 3 | Miércoles | $27.000 | 2 × $11.000 | $49.000 |
+| **Total** | | | | **$147.000** |
+
+*Tabla 11. Ejemplo de cálculo de tarifa para 3 noches con SP4.*
+
+## 6.5 SP5 — sp_ValidateOverbooking
+
+Verifica solapamiento de fechas para prevenir overbooking. Parámetro `@IsOverbooked` (BIT, OUT).
+
+## 6.6 SP6 — sp_GetRatesByCriteria
+
+Consulta avanzada cruzando sitio, temporada, alojamiento y personas. Todos los parámetros opcionales. Retorna `EffectivePricePerNight`.
+
+## 6.7 Seguridad en SPs
+
+- Parámetros tipados (prevención de SQL Injection).
+- `SET NOCOUNT ON` en todos los SPs.
+- Invocación desde EF Core con `SqlParameter` tipados.
+
+<div class="pb"></div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!--            7. IDENTITY Y SEGURIDAD                        -->
+<!-- ══════════════════════════════════════════════════════════ -->
+
+# 7. Identity y Seguridad
+
+## 7.1 Configuración
+
+| Parámetro | Valor |
+|-----------|-------|
+| Longitud mínima contraseña | 8 caracteres |
+| Requiere mayúscula | Sí |
+| Requiere minúscula | Sí |
+| Requiere dígito | Sí |
+| Requiere carácter especial | Sí |
+| Intentos antes de bloqueo | 5 |
+| Tiempo de bloqueo | 15 minutos |
+
+*Tabla 12. Políticas de seguridad en ASP.NET Core Identity.*
+
+## 7.2 Roles
+
+| Rol | Acceso |
+|-----|--------|
+| Admin | CRUD completo, gestión de reservas, dashboard |
+| Receptionist | Gestión de reservas, check-in/check-out |
+| Guest / Cliente | Disponibilidad, reservas propias, favoritos |
+
+*Tabla 13. Roles del sistema.*
+
+## 7.3 Controles OWASP
+
+| Vulnerabilidad | Control |
+|---------------|---------|
+| A01: Broken Access Control | `[Authorize(Roles = "Admin")]`, verificación de propiedad |
+| A02: Cryptographic Failures | PBKDF2 con salt aleatorio |
+| A03: Injection | Queries parametrizadas, `SqlParameter` tipados |
+| A05: Security Misconfiguration | Secrets en variables de entorno |
+| A07: Auth Failures | Bloqueo tras 5 intentos, mensajes genéricos |
+| A08: Data Integrity | `[ValidateAntiForgeryToken]`, tokens anti-CSRF |
+
+*Tabla 14. Controles de seguridad según OWASP Top 10.*
+
+## 7.4 Autenticación y registro
+
+<div class="fig-row">
+<div class="fig">
+
+![Login](docs/screenshots/02-login.png)
+
+<div class="fig-caption">Figura 2. Formulario de inicio de sesión.</div>
+</div>
+<div class="fig">
+
+![Registro](docs/screenshots/03-registro.png)
+
+<div class="fig-caption">Figura 3. Formulario de registro de usuario.</div>
+</div>
+</div>
+
+<div class="pb"></div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!--              8. FLUJO FUNCIONAL                           -->
+<!-- ══════════════════════════════════════════════════════════ -->
+
+# 8. Flujo Funcional
+
+## 8.1 Flujo general
+
+```
+Usuario anónimo
+  ├─► Registro → Confirmación email
+  ├─► Login
+  │     ├─► ¿Olvidó contraseña? → Email SMTP → Reset
+  │     └─► Autenticado:
+  │           ├─► [Cliente]
+  │           │     ├─► Búsqueda disponibilidad → Selección → Tarifa → Reserva
+  │           │     ├─► Mis reservas
+  │           │     └─► Favoritos
+  │           └─► [Admin]
+  │                 ├─► Dashboard
+  │                 ├─► CRUD Sedes/Alojamientos/Habitaciones
+  │                 ├─► CRUD Temporadas/Tarifas
+  │                 └─► Gestión Reservas
+  └─► Cerrar sesión
+```
+
+## 8.2 Estados de reserva
+
+```
+  Pending ──► Confirmed ──► CheckedIn ──► CheckedOut
+    │              │
+    ▼              ▼
+  Cancelled      NoShow
+```
+
+## 8.3 Panel administrativo
+
+<div class="fig-row">
+<div class="fig">
+
+![Dashboard](docs/screenshots/04-dashboard-admin.png)
+
+<div class="fig-caption">Figura 4. Dashboard con métricas de reservas, ingresos y ocupación.</div>
+</div>
+<div class="fig">
+
+![Sedes](docs/screenshots/05-sites-crud.png)
+
+<div class="fig-caption">Figura 5. CRUD de sedes recreativas.</div>
+</div>
+</div>
+
+<div class="fig-row">
+<div class="fig">
+
+![Alojamientos](docs/screenshots/06-accommodations-crud.png)
+
+<div class="fig-caption">Figura 6. CRUD de alojamientos.</div>
+</div>
+<div class="fig">
+
+![Habitaciones](docs/screenshots/07-rooms-crud.png)
+
+<div class="fig-caption">Figura 7. CRUD de habitaciones.</div>
+</div>
+</div>
+
+<div class="fig-row">
+<div class="fig">
+
+![Temporadas](docs/screenshots/08-seasons-crud.png)
+
+<div class="fig-caption">Figura 8. CRUD de temporadas.</div>
+</div>
+<div class="fig">
+
+![Tarifas](docs/screenshots/09-rates-crud.png)
+
+<div class="fig-caption">Figura 9. CRUD de tarifas.</div>
+</div>
+</div>
+
+## 8.4 Gestión de reservas
+
+![Gestión de reservas](docs/screenshots/10-reservations-crud.png)
+
+*Figura 10. Panel de gestión de reservas con filtros por estado y acciones de confirmación, check-in/out y cancelación.*
+
+## 8.5 Portal del asociado
+
+<div class="fig-row">
+<div class="fig">
+
+![Disponibilidad](docs/screenshots/11-availability-search.png)
+
+<div class="fig-caption">Figura 11. Consulta de disponibilidad con precios calculados por SPs.</div>
+</div>
+<div class="fig">
+
+![Mis reservas](docs/screenshots/15-my-reservations.png)
+
+<div class="fig-caption">Figura 12. Historial de reservas del asociado.</div>
+</div>
+</div>
+
+## 8.6 Recuperación de contraseña
+
+![Recuperar contraseña](docs/screenshots/16-forgot-password.png)
+
+*Figura 13. Formulario de recuperación de contraseña vía email SMTP.*
+
+<div class="pb"></div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!--            9. SERVICIO DE EMAIL (SMTP)                    -->
+<!-- ══════════════════════════════════════════════════════════ -->
+
+# 9. Servicio de Email (SMTP)
+
+## 9.1 Arquitectura
+
+```
+IEmailSender<ApplicationUser> (Identity)
+  └── IdentityEmailSender
+        ├── Detecta tipo (confirmación, reset, notificación)
+        ├── Construye plantilla HTML (EmailTemplateService)
+        └── Envía via SMTP (EmailService → MailKit)
+```
+
+## 9.2 Flujo de recuperación
+
+1. Usuario ingresa email en ForgotPassword.
+2. Identity genera token de restablecimiento.
+3. IdentityEmailSender construye email con plantilla HTML.
+4. EmailService conecta al servidor SMTP y envía.
+5. Usuario recibe enlace con token → ResetPassword.
+
+## 9.3 Protocolos
+
+| Puerto | Protocolo | Comportamiento |
+|--------|-----------|----------------|
+| 465 | SSL | Conexión directa (`SslOnConnect`) |
+| 587 | STARTTLS | Plain + upgrade a TLS (`StartTls`) |
+| Otro | Auto | Detección automática |
+
+*Tabla 15. Protocolos SMTP soportados.*
+
+## 9.4 Seguridad
+
+- Credenciales SMTP en variables de entorno (no en código fuente).
+- Enlaces codificados con `HtmlEncoder.Default.Encode()` para prevenir XSS.
+- `appsettings.Development.json` excluido de Git via `.gitignore`.
+
+<div class="pb"></div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!--          10. DOCKER Y CONTENEDORIZACIÓN                   -->
+<!-- ══════════════════════════════════════════════════════════ -->
+
+# 10. Docker y Contenedorización
+
+## 10.1 Multi-stage build
+
+```dockerfile
+# Etapa 1: Build (mcr.microsoft.com/dotnet/sdk:8.0)
+#   → Restore NuGet (capas cacheadas)
+#   → Node.js 20 via NodeSource → npm ci → css:build
+#   → dotnet publish -c Release → /app/publish
+
+# Etapa 2: Runtime (mcr.microsoft.com/dotnet/aspnet:8.0)
+#   → Copia artefactos (~220 MB)
+#   → ASPNETCORE_ENVIRONMENT=Production
+#   → ENTRYPOINT ["dotnet", "ReservasXYZ.Web.dll"]
+```
+
+## 10.2 Servicios
+
+| Servicio | Imagen | Puerto | Health check |
+|----------|--------|--------|-------------|
+| `sqlserver` | mssql/server:2022-latest | 1433 | sqlcmd cada 15s |
+| `web` | Build local | 5000 | depends_on: sqlserver |
+| `nginx` | nginx:alpine | 80, 443 | — |
+| `certbot` | certbot/certbot | — | Renewal 6h |
+
+*Tabla 16. Servicios Docker Compose.*
+
+## 10.3 Variables de entorno
+
+```env
+SA_PASSWORD=***          SMTP_SERVER=***
+SMTP_PORT=587            SMTP_SENDER_NAME=***
+SMTP_EMAIL=***           SMTP_PASSWORD=***
+DOMAIN=***
+```
+
+## 10.4 Evidencia de producción
+
+```
+NAMES              STATUS                 PORTS
+reservas-certbot   Up 2h                  80, 443
+reservas-nginx     Up 2h                  0.0.0.0:80→80, 0.0.0.0:443→443
+reservas-web       Up 2h                  0.0.0.0:5000→5000
+reservas-db        Up 2h (healthy)        0.0.0.0:1433→1433
+```
+
+<div class="pb"></div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!--             11. DESPLIEGUE EN VPS                         -->
+<!-- ══════════════════════════════════════════════════════════ -->
+
+# 11. Despliegue en VPS
+
+## 11.1 Infraestructura
+
+| Componente | Detalle |
+|-----------|---------|
+| Proveedor | Google Cloud Platform (GCE) |
+| Instancia | e2-medium (2 vCPU, 4 GB RAM, 40 GB SSD) |
+| SO | Ubuntu 22.04 LTS |
+| Runtime | Docker 29.5.2 + Docker Compose v2 |
+| Reverse Proxy | Nginx Alpine |
+| SSL | Let's Encrypt via Certbot (renovación cada 6h) |
+| DNS | Hostinger (registro A → IP estática GCP) |
+| URL | https://reservas-xyz.app-dev.icu |
+
+*Tabla 17. Infraestructura de producción.*
+
+## 11.2 Seguridad VPS
+
+- Firewall GCP: solo puertos 22, 80, 443.
+- SSH con clave ED25519, sin contraseña.
+- Usuario `deploy` sin acceso root.
+- Archivo `.env` solo en servidor.
+- Redirección HTTP → HTTPS (301).
+- Restart policy: `unless-stopped`.
+
+## 11.3 Persistencia
+
+| Volumen | Contenido |
+|---------|-----------|
+| `sqldata` | Datos SQL Server |
+| `certbot-etc` | Certificados SSL |
+| `certbot-var` | Datos Certbot |
+
+*Tabla 18. Volúmenes Docker para persistencia.*
+
+## 11.4 Evidencia
+
+<div class="fig-row">
+<div class="fig">
+
+![Producción](docs/screenshots/21-vps-evidence.png)
+
+<div class="fig-caption">Figura 14. Sistema en producción con HTTPS en reservas-xyz.app-dev.icu.</div>
+</div>
+<div class="fig">
+
+![Responsive](docs/screenshots/22-responsive-view.png)
+
+<div class="fig-caption">Figura 15. Vista responsive móvil (390×844).</div>
+</div>
+</div>
+
+<div class="pb"></div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!--          12. INSTRUCCIONES DE EJECUCIÓN                   -->
+<!-- ══════════════════════════════════════════════════════════ -->
+
+# 12. Instrucciones de Ejecución
+
+## 12.1 Opción A — Local
+
+**Requisitos:** .NET SDK 8.0, SQL Server, Node.js 20+.
 
 ```powershell
-# 1. Clonar repositorio
 git clone https://github.com/juan-campo-dev/reservas-xyz.git
 cd reservas-xyz
-
-# 2. Restaurar paquetes
 dotnet restore ReservasXYZ.sln
-
-# 3. Instalar dependencias Node.js
-cd ReservasXYZ.Web
-npm install
-
-# 4. Compilar CSS
-npm run css:build
-
-# 5. Volver a raíz
-cd ..
-
-# 6. Ejecutar
+cd ReservasXYZ.Web && npm install && npm run css:build && cd ..
+dotnet build ReservasXYZ.sln
 dotnet run --project ReservasXYZ.Web --launch-profile http
 ```
 
-La aplicación estará en **http://localhost:5263**.
+Disponible en **http://localhost:5263**.
 
-La base de datos se crea automáticamente al iniciar (migraciones + seed + SPs + catálogo FODUN).
+> La base de datos se crea automáticamente al iniciar: migraciones, roles, usuario admin, 6 SPs y catálogo FODUN (8 sedes, 10 alojamientos, 54 habitaciones).
 
-### Opción B: Docker Compose
-
-**Requisitos**: Docker Engine 20.10+, Docker Compose v2+.
+## 12.2 Opción B — Docker Compose
 
 ```bash
-# 1. Copiar variables de entorno
-cp .env.example .env
-# Editar .env con credenciales reales
-
-# 2. Construir y levantar
+cp .env.example .env        # Configurar credenciales
 docker compose up -d --build
-
-# 3. Verificar servicios
-docker compose ps
+docker compose ps            # Verificar servicios
 ```
 
-La aplicación estará en **http://localhost** (puerto 80).
+Disponible en **http://localhost** (puerto 80).
 
-### Opción C: Restaurar BD desde script SQL
-
-Si se prefiere crear la base de datos manualmente:
+## 12.3 Opción C — Script SQL manual
 
 ```sql
--- 1. Ejecutar database/Database.sql (crea estructura + SPs)
--- 2. Ejecutar database/SeedCatalog.sql (carga catálogo FODUN)
+CREATE DATABASE ReservasXYZDb;
+GO
+USE ReservasXYZDb;
+GO
+-- Ejecutar database/Database.sql + database/SeedCatalog.sql
 ```
 
----
+## 12.4 Usuarios de prueba
 
-## 19. Capturas de Pantalla
+| Rol | Email | Contraseña |
+|-----|-------|------------|
+| Admin | admin@hotel.com | Admin123! |
+| Admin (test) | admin@test.com | Admin123* |
+| Cliente (test) | cliente@test.com | Cliente123* |
 
-_Nota: Las capturas del sistema en funcionamiento se pueden generar accediendo a:_
+*Tabla 19. Credenciales de usuarios de prueba.*
 
-- **Landing page**: http://localhost:5263
-- **Login**: http://localhost:5263/Identity/Account/Login
-- **Portal de asociados**: http://localhost:5263 (autenticado)
-- **Búsqueda de disponibilidad**: Sección "Consultar Disponibilidad" en el portal
-- **Panel admin**: http://localhost:5263 (login como admin@hotel.com)
-- **Dashboard**: Métricas de reservas e ingresos
-- **CRUD Sedes**: Listado y formulario de sedes
-- **Producción**: https://reservas-xyz.app-dev.icu
+<div class="pb"></div>
 
----
+<!-- ══════════════════════════════════════════════════════════ -->
+<!--                13. CONCLUSIONES                           -->
+<!-- ══════════════════════════════════════════════════════════ -->
 
-## 20. Conclusiones
+# 13. Conclusiones
 
-### Cumplimiento de requisitos
+## 13.1 Cumplimiento de requisitos
 
-El sistema implementa la totalidad de los requisitos solicitados en la prueba técnica:
+| # | Requisito | Estado |
+|---|-----------|--------|
+| 1 | Estructura BD relacional SQL Server | ✅ |
+| 2 | SP disponibilidad por fechas | ✅ sp_GetAvailableRoomsByDates |
+| 3 | SP disponibilidad por fechas + personas | ✅ sp_GetAvailableRoomsByDatesAndGuests |
+| 4 | SP tarifas por sitio/temporada/personas | ✅ sp_GetRoomRates + sp_GetRatesByCriteria |
+| 5 | SP cálculo tarifa total | ✅ sp_CalculateTotalRate |
+| 6 | Diseño formularios web | ✅ Razor Views |
+| 7 | Registro de usuarios | ✅ Nombre, apellido, documento, email |
+| 8 | Login (solo autenticados) | ✅ [Authorize] + Identity |
+| 9 | Recuperación contraseña SMTP | ✅ MailKit |
+| 10 | CRUD formularios | ✅ 6 módulos completos |
+| 11 | Consulta disponibilidad | ✅ Por fechas y personas |
+| 12 | Guardar reservas | ✅ Transacción SERIALIZABLE |
+| 13 | MVC .NET Core | ✅ ASP.NET Core 8.0 |
+| 14 | Programación en capas | ✅ Clean Architecture (4 capas) |
+| 15 | Entity Framework | ✅ EF Core 8.0 + Fluent API |
+| 16 | Identity | ✅ Roles + bloqueo + email |
+| 17 | Documento técnico | ✅ Este documento |
 
-1. ✅ **Estructura de BD relacional en SQL Server**: 9 tablas + Identity + índices + FK.
-2. ✅ **SP de disponibilidad por fechas**: `sp_GetAvailableRoomsByDates`.
-3. ✅ **SP de disponibilidad por fechas + personas**: `sp_GetAvailableRoomsByDatesAndGuests`.
-4. ✅ **SP de tarifas por sitio/temporada/personas/alojamiento**: `sp_GetRoomRates` + `sp_GetRatesByCriteria`.
-5. ✅ **SP de cálculo de tarifa total**: `sp_CalculateTotalRate` (motor iterativo día por día).
-6. ✅ **Formularios web**: Razor Views para todas las funcionalidades.
-7. ✅ **Registro de usuarios**: Con nombre, apellido, documento.
-8. ✅ **Login funcional**: Solo autenticados acceden al sistema.
-9. ✅ **Recuperación de contraseña SMTP**: Email con enlace de restablecimiento.
-10. ✅ **CRUD de formularios**: Sedes, Alojamientos, Habitaciones, Temporadas, Tarifas, Reservas.
-11. ✅ **Consulta de disponibilidad**: Por fechas y personas usando SPs.
-12. ✅ **Guardar reservas**: Con detalle por habitación y cálculo de precio.
-13. ✅ **Modelo MVC**: ASP.NET Core MVC con Razor Views.
-14. ✅ **Programación en capas**: Clean Architecture (4 capas).
-15. ✅ **Entity Framework**: EF Core 8.0 con Fluent API.
-16. ✅ **Identity**: Autenticación completa con roles y bloqueo.
-17. ✅ **Documento técnico**: Este documento.
+*Tabla 20. Matriz de cumplimiento de requisitos.*
 
-### Valor agregado (más allá de los requisitos)
+## 13.2 Valor agregado
 
-- Motor de tarificación FODUN con reglas de negocio complejas (Lun-Jue, temporadas, extras).
+- Motor de tarificación FODUN (Lun-Jue especial, temporadas, extras por persona).
 - Prevención de overbooking con transacciones SERIALIZABLE.
-- 6 SPs (4 requeridos + 2 auxiliares).
-- Despliegue en producción con Docker + VPS + SSL.
-- Plantillas de email HTML profesionales.
+- 6 Stored Procedures (4 requeridos + 2 auxiliares).
+- Despliegue Docker + VPS + SSL (Let's Encrypt).
+- Plantillas de email HTML con branding.
 - Interfaz en español colombiano (es-CO).
-- Soft delete en todas las entidades.
-- Fallback LINQ en repositorios.
-- Validación con FluentValidation + mensajes en español.
-- Dashboard administrativo con métricas.
+- Soft delete, fallback LINQ, FluentValidation en español.
+- Dashboard con métricas de ocupación e ingresos.
+- Sistema de favoritos y diseño responsive.
 
-### Decisiones de diseño
+## 13.3 Decisiones de diseño
 
-La arquitectura fue diseñada priorizando:
+| Decisión | Justificación |
+|----------|---------------|
+| Clean Architecture | Separación de responsabilidades, testabilidad |
+| SPs + EF Core | SPs para lógica compleja, EF Core para CRUD, fallback LINQ |
+| Transacción SERIALIZABLE | Prevención de overbooking concurrente |
+| Docker multi-stage | Imagen optimizada (~220 MB), build reproducible |
+| Tailwind CSS v4 | Build local, sin CDN, UI responsive |
 
-- **Robustez**: Transacciones serializables, validación en múltiples capas.
-- **Mantenibilidad**: Clean Architecture, DTOs, Repository Pattern.
-- **Seguridad**: Identity, CSRF, parametrización, gestión de secretos.
-- **Operabilidad**: Docker, health checks, logs, restart policies.
+*Tabla 21. Decisiones arquitectónicas.*
+
+## 13.4 Mejoras futuras
+
+- Tests unitarios con xUnit.
+- Paginación server-side.
+- Exportación reportes PDF/Excel.
+- Galería de fotos por habitación.
+- Notificaciones push (SignalR).
+- API REST con Swagger/OpenAPI.
 
 ---
 
-_Documento generado como parte de la entrega de la prueba técnica para el cargo de Analista Desarrollador .NET — Fondo de Empleados XYZ._
+*Documento técnico — Prueba técnica Analista Desarrollador .NET — Fondo de Empleados XYZ (FODUN)*
+
+*Mayo 2026 · Juan Campo · v1.0*
