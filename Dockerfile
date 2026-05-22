@@ -12,7 +12,10 @@ RUN dotnet restore
 COPY . .
 
 WORKDIR /src/ReservasXYZ.Web
-RUN apt-get update && apt-get install -y nodejs npm && npm ci && npm run css:build
+RUN apt-get update && apt-get install -y ca-certificates curl gnupg \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && npm ci && npm run css:build
 RUN dotnet publish -c Release -o /app/publish --no-restore
 
 # ── Runtime stage ──
