@@ -47,17 +47,17 @@ ReservasXYZ.Web             → Controllers MVC, Razor Views, Identity Pages, ww
 
 | Tecnología | Versión | Propósito |
 |-----------|---------|-----------|
-| .NET | 9.0 | Runtime y SDK |
-| ASP.NET Core MVC | 9.0 | Framework web |
-| Razor Views / Pages | 9.0 | Motor de vistas |
-| Entity Framework Core | 9.0 | ORM y migraciones |
+| .NET | 8.0 | Runtime y SDK |
+| ASP.NET Core MVC | 8.0 | Framework web |
+| Razor Views / Pages | 8.0 | Motor de vistas |
+| Entity Framework Core | 8.0 | ORM y migraciones |
 | SQL Server | 2019+ / LocalDB | Motor de base de datos |
-| ASP.NET Core Identity | 9.0 | Autenticación y autorización |
+| ASP.NET Core Identity | 8.0 | Autenticación y autorización |
 | AutoMapper | 13.x | Mapeo entidades ↔ DTOs |
 | FluentValidation | 11.x | Validación de DTOs |
 | MailKit | 4.x | Envío SMTP |
 | Tailwind CSS | 4.3.0 | Framework CSS utility-first |
-| Node.js | 18+ | Build de CSS |
+| Node.js | 20+ | Build de CSS (Tailwind v4 requiere Node 20+) |
 
 ---
 
@@ -236,9 +236,9 @@ Consulta tarifas cruzando sede, temporada, alojamiento y número de personas.
 
 | Requisito | Versión mínima |
 |-----------|---------------|
-| .NET SDK | 9.0 |
+| .NET SDK | 8.0 |
 | SQL Server | 2019+ o LocalDB |
-| Node.js | 18+ |
+| Node.js | 20+ |
 | npm | 9+ |
 
 ### Variables de configuración (`appsettings.json`)
@@ -391,7 +391,166 @@ La base de datos se crea y migra automáticamente al iniciar la aplicación. El 
 - [ ] Notificaciones push en tiempo real (SignalR).
 - [ ] Multi-idioma con archivos de recursos (`.resx`).
 - [ ] API REST con Swagger/OpenAPI para integraciones externas.
-- [ ] Deploy con Docker Compose (SQL Server + Web).
+
+---
+
+## Despliegue con Docker
+
+El proyecto incluye soporte completo para despliegue con Docker Compose.
+
+### Arquitectura de contenedores
+
+| Servicio | Imagen | Puerto | Propósito |
+|----------|--------|--------|-----------|
+| `sqlserver` | `mcr.microsoft.com/mssql/server:2022-latest` | 1433 | Base de datos SQL Server 2022 Express |
+| `web` | Build multi-stage (SDK 8.0 → Runtime 8.0) | 5000 | Aplicación ASP.NET Core |
+| `nginx` | `nginx:alpine` | 80, 443 | Reverse proxy + SSL termination |
+| `certbot` | `certbot/certbot` | — | Renovación automática de certificados SSL |
+
+### Requisitos
+
+- Docker Engine 20.10+
+- Docker Compose v2+
+
+### Variables de entorno (`.env`)
+
+Copiar `.env.example` a `.env` y configurar:
+
+```env
+SA_PASSWORD=ContraseñaSegura123!    # Password del SA de SQL Server
+SMTP_SERVER=smtp.gmail.com          # Servidor SMTP
+SMTP_PORT=587                       # Puerto SMTP
+SMTP_SENDER_NAME=Reservas XYZ      # Nombre del remitente
+SMTP_EMAIL=correo@ejemplo.com      # Email del remitente
+SMTP_PASSWORD=app-password          # Contraseña de aplicación SMTP
+DOMAIN=tu-dominio.com              # Dominio para SSL
+```
+
+### Levantar el proyecto
+
+```bash
+# Construir y levantar todos los servicios
+docker compose up -d --build
+
+# Ver logs
+docker compose logs -f web
+
+# Detener servicios
+docker compose down
+
+# Detener y eliminar volúmenes (⚠️ borra datos de BD)
+docker compose down -v
+```
+
+### Características del Dockerfile
+
+- **Multi-stage build**: SDK 8.0 para compilar → aspnet:8.0 para runtime.
+- **Node.js 20** via NodeSource para compilar Tailwind CSS v4.
+- **CSS compilado** en build: `npm ci && npm run css:build`.
+- **Imagen final** optimizada (~220 MB).
+
+---
+
+## Despliegue en VPS (Producción)
+
+El sistema está desplegado en un VPS de Google Cloud Platform.
+
+### Infraestructura
+
+| Componente | Detalle |
+|-----------|---------|
+| **Proveedor** | Google Cloud Platform (GCE) |
+| **Instancia** | e2-medium (2 vCPU, 4 GB RAM, 40 GB SSD) |
+| **SO** | Ubuntu 22.04 LTS |
+| **Runtime** | Docker + Docker Compose |
+| **Reverse Proxy** | Nginx (Alpine) en contenedor |
+| **SSL** | Let's Encrypt via Certbot (renovación automática cada 6h) |
+| **DNS** | Hostinger (registro A apuntando a IP estática GCP) |
+| **URL** | https://reservas-xyz.app-dev.icu |
+
+### Seguridad del VPS
+
+- Firewall GCP: solo puertos 22 (SSH), 80 (HTTP), 443 (HTTPS).
+- Acceso SSH por clave ED25519 (sin password).
+- Usuario `deploy` (sin root directo).
+- Secrets en archivo `.env` (no en repositorio).
+- SSL/TLS con certificados Let's Encrypt.
+- HTTP redirige automáticamente a HTTPS (301).
+- `restart: unless-stopped` en todos los contenedores.
+
+### Persistencia
+
+- Volumen Docker `sqldata` para datos de SQL Server.
+- Volúmenes `certbot-etc` y `certbot-var` para certificados SSL.
+- Los datos sobreviven reinicios de contenedores.
+
+---
+
+## Usuarios de prueba
+
+### Administrador
+
+| Campo | Valor |
+|-------|-------|
+| **Email** | `admin@hotel.com` |
+| **Contraseña** | `Admin123!` |
+| **Rol** | Admin |
+
+### Administrador (test)
+
+| Campo | Valor |
+|-------|-------|
+| **Email** | `admin@test.com` |
+| **Contraseña** | `Admin123*` |
+| **Rol** | Admin |
+
+### Cliente (test)
+
+| Campo | Valor |
+|-------|-------|
+| **Email** | `cliente@test.com` |
+| **Contraseña** | `Cliente123*` |
+| **Rol** | Cliente |
+
+### Crear un nuevo usuario
+
+1. Acceder a la página de registro (`/Identity/Account/Register`).
+2. Completar: nombre, apellido, documento, email y contraseña.
+3. Si `RequireConfirmedAccount` está activo, confirmar email vía enlace SMTP.
+4. Iniciar sesión con las credenciales registradas.
+5. El rol asignado por defecto es `Cliente` (acceso al portal de asociados).
+
+---
+
+## Guía de uso
+
+### Consultar disponibilidad
+
+1. Iniciar sesión como cualquier usuario.
+2. En el portal de asociados, seleccionar sede, fechas y número de personas.
+3. El sistema ejecuta los Stored Procedures para buscar habitaciones disponibles.
+4. Se muestran las habitaciones con precio calculado por el motor de tarificación.
+
+### Crear una reserva
+
+1. Desde los resultados de disponibilidad, seleccionar una o más habitaciones.
+2. Revisar el resumen de costos (desglose por noche, extras por persona).
+3. Confirmar la reserva.
+4. La reserva queda en estado "Pendiente" hasta confirmación del admin.
+
+### Panel de administración
+
+1. Iniciar sesión como `admin@hotel.com`.
+2. Acceder al dashboard con métricas de reservas e ingresos.
+3. Gestionar: Sedes → Alojamientos → Habitaciones → Temporadas → Tarifas → Reservas.
+4. Confirmar, hacer check-in/check-out o cancelar reservas.
+
+### Recuperar contraseña
+
+1. En la pantalla de login, hacer clic en "¿Olvidó su contraseña?".
+2. Ingresar el email registrado.
+3. Se envía un enlace de restablecimiento por SMTP.
+4. Hacer clic en el enlace y crear nueva contraseña.
 
 ---
 
@@ -405,27 +564,39 @@ La base de datos se crea y migra automáticamente al iniciar la aplicación. El 
 | Error de migración | Ejecutar `dotnet ef database update --project ReservasXYZ.Infrastructure --startup-project ReservasXYZ.Web`. |
 | Seed no se ejecuta | Verificar que la BD es accesible al inicio. Revisar logs en consola. |
 | Puerto 5263 ocupado | Detener procesos: `Get-NetTCPConnection -LocalPort 5263` y `Stop-Process -Id <PID>`. |
+| Docker build falla con Node | Verificar que el Dockerfile usa NodeSource setup_20.x (Tailwind v4 requiere Node 20+). |
+| SQL Server no arranca en Docker | Verificar que `SA_PASSWORD` cumple requisitos de complejidad. El healthcheck espera hasta 60s. |
+| Certbot falla | Verificar que el dominio DNS apunta correctamente a la IP del VPS. Puerto 80 debe estar abierto. |
+
+---
+
+## Notas técnicas
+
+- **Motor de tarificación FODUN**: Itera día por día para calcular el precio total. Lunes a jueves usa tarifa especial rebajada si existe y no es alta temporada. Viernes a domingo aplica tarifa estándar con multiplicador de temporada.
+- **Transacciones SERIALIZABLE**: Las reservas usan nivel de aislamiento SERIALIZABLE para prevenir overbooking en escenarios concurrentes. Puede generar deadlocks bajo carga extrema.
+- **Fallback LINQ**: Si un SP falla, los repositorios ejecutan la lógica equivalente con LINQ como fallback. Esto garantiza disponibilidad incluso si los SPs no están cargados.
+- **Cultura es-CO**: Toda la aplicación usa formato colombiano para moneda ($), fechas (dd/MM/yyyy) y separadores decimales.
 
 ---
 
 ## Entrega
 
-Documentos complementarios:
-
-- `docs/setup/INSTALL.md` — Guía de instalación.
-- `docs/setup/DEPLOYMENT.md` — Guía de despliegue.
-- `docs/setup/DATABASE_SETUP.md` — Configuración de base de datos.
-- `docs/reference/TECHNICAL_DOCUMENTATION.md` — Documentación técnica detallada.
-- `docs/requirements/` — Prueba técnica y anexo FODUN.
-- `database/Database.sql` — Script SQL completo.
-- `database/SeedCatalog.sql` — Datos de catálogo FODUN.
+| Entregable | Archivo |
+|-----------|---------|
+| Proyecto completo | `ReservasXYZ.zip` (solución .NET + Docker) |
+| Script de BD | `database/Database.sql` |
+| Datos de catálogo | `database/SeedCatalog.sql` |
+| Stored Procedures | `ReservasXYZ.Infrastructure/StoredProcedures/StoredProcedures.sql` |
+| Documento técnico | `DOCUMENTO_TECNICO.md` |
+| Variables de entorno | `.env.example` |
+| Docker | `Dockerfile` + `docker-compose.yml` |
 
 ---
 
 ## Licencia
 
-Proyecto desarrollado como prueba técnica. Uso exclusivamente académico y de evaluación.
+Proyecto desarrollado como prueba técnica para el cargo de Analista Desarrollador .NET. Uso exclusivamente académico y de evaluación.
 
 ---
 
-> **ReservasXYZ** · Fondo de Empleados XYZ · ASP.NET Core 9.0 · SQL Server · 2026
+> **ReservasXYZ** · Fondo de Empleados XYZ · ASP.NET Core 8.0 · SQL Server · 2026
