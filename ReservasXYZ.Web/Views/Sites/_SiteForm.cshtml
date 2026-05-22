@@ -1,0 +1,71 @@
+@model dynamic
+@{
+    var isEdit = Model is ReservasXYZ.Application.DTOs.UpdateSiteDto;
+    var action = isEdit ? "Edit" : "Create";
+    var title = isEdit ? "Editar sitio" : "Nuevo sitio";
+}
+
+<div class="admin-modal-header">
+    <button type="button" class="admin-modal-close" onclick="window.__adminModal.close()" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6L6 18" />
+        </svg>
+    </button>
+    <h3 class="admin-modal-title">@title</h3>
+    <p class="admin-modal-subtitle">@(isEdit ? "Modifica los datos del sitio" : "Completa los datos para registrar un nuevo sitio")</p>
+</div>
+<form id="siteModalForm" asp-action="@action" method="post">
+    @Html.AntiForgeryToken()
+    @if (isEdit)
+    {
+        <input type="hidden" name="Id" value = "@Model.Id" />
+ 
+        }
+            <div class="admin-modal-body">
+                <div class="admin-modal-grid">
+                    <div class="admin-modal-field">
+                        <label class="admin-modal-label">Nombre</label>
+                        <input class="admin-modal-input" name="Name" value = "@Model.Name" required />
+                    </div>
+                    <div class="admin-modal-field">
+                        <label class="admin-modal-label">Ciudad</label>
+                        <input class="admin-modal-input" name="City" value = "@Model.City" required />
+                    </div>
+                    <div class="admin-modal-field">
+                        <label class="admin-modal-label">País</label>
+                        <input class="admin-modal-input" name="Country" value = "@Model.Country" required />
+                    </div>
+                    <div class="admin-modal-field">
+                        <label class="admin-modal-label">Dirección</label>
+                        <input class="admin-modal-input" name="Address" value = "@Model.Address" required />
+                    </div>
+                    <div class="admin-modal-field">
+                        <label class="admin-modal-label">Teléfono</label>
+                        <input class="admin-modal-input" name="Phone" value = "@Model.Phone" />
+                    </div>
+                    <div class="admin-modal-field">
+                        <label class="admin-modal-label">Email</label>
+                        <input class="admin-modal-input" name="Email" type="email" value = "@Model.Email" />
+                    </div>
+                    <div class="admin-modal-field admin-modal-field--full">
+                        <label class="admin-modal-label">Descripción</label>
+                        <textarea class="admin-modal-input" name="Description" rows="3">@Model.Description</textarea>
+                    </div>
+                    @if(isEdit)
+                {
+                   <div class="admin-modal-field">
+                        <label class="admin-modal-label admin-modal-label--checkbox">
+                            <input type="checkbox" name="IsActive" value="true" @(Model.IsActive ? "checked" : "") />
+                            Activo
+                        </label>
+                    </div>
+       
+                }
+            </div>
+        </div>
+       <div class="admin-modal-footer">
+        <button type="button" class="admin-modal-btn admin-modal-btn--cancel"
+          onclick="window.__adminModal.close()">Cancelar</button>
+        <button type="submit" class="admin-modal-btn admin-modal-btn--primary">@(isEdit ? "Guardar cambios" : "Crear sitio")</button>
+    </div>
+</form>

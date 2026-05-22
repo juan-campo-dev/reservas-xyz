@@ -1,0 +1,117 @@
+@page
+@model RegisterModel
+@{
+    ViewData["Title"] = "Registro";
+}
+
+<div class="compute-card w-full max-w-[660px] rounded-3xl p-6 lg:p-7">
+    <div class="app-auth-header">
+        <div class="app-compact-heading app-compact-heading--solo">
+            <h1 class="app-compact-heading-title">Crear cuenta</h1>
+        </div>
+    </div>
+
+    <form id="registerForm" asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl" method="post"
+          class="space-y-4">
+        <div asp-validation-summary="ModelOnly" class="text-sm text-red-300"></div>
+
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div>
+                <label asp-for="Input.FirstName" class="mb-2 block text-sm text-muted-foreground">Nombres</label>
+                <input asp-for="Input.FirstName" autocomplete="given-name" class="compute-input" />
+                <span asp-validation-for="Input.FirstName" class="mt-1 block text-sm text-red-300"></span>
+            </div>
+
+            <div>
+                <label asp-for="Input.LastName" class="mb-2 block text-sm text-muted-foreground">Apellidos</label>
+                <input asp-for="Input.LastName" autocomplete="family-name" class="compute-input" />
+                <span asp-validation-for="Input.LastName" class="mt-1 block text-sm text-red-300"></span>
+            </div>
+
+            <div>
+                <label asp-for="Input.DocumentNumber" class="mb-2 block text-sm text-muted-foreground">Documento</label>
+                <input asp-for="Input.DocumentNumber" autocomplete="off" class="compute-input" />
+                <span asp-validation-for="Input.DocumentNumber" class="mt-1 block text-sm text-red-300"></span>
+            </div>
+
+            <div>
+                <label asp-for="Input.Email" class="mb-2 block text-sm text-muted-foreground">Correo electrónico</label>
+                <input asp-for="Input.Email" autocomplete="username" class="compute-input" />
+                <span asp-validation-for="Input.Email" class="mt-1 block text-sm text-red-300"></span>
+            </div>
+
+            <div>
+                <label asp-for="Input.Password" class="mb-2 block text-sm text-muted-foreground">Contraseña</label>
+                <div class="compute-password-field">
+                    <input asp-for="Input.Password" autocomplete="new-password"
+                           class="compute-input compute-input-with-toggle" />
+                    <button type="button" class="compute-password-toggle"
+                            data-password-toggle="@Html.IdFor(m => m.Input.Password)" aria-label="Ver contraseña"
+                            aria-pressed="false">
+                        <svg data-password-icon="hidden" aria-hidden="true" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="1.75">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="M2.04 12.32a1 1 0 0 1 0-.64C3.42 7.51 7.36 4.5 12 4.5s8.58 3.01 9.96 7.18a1 1 0 0 1 0 .64C20.58 16.49 16.64 19.5 12 19.5s-8.58-3.01-9.96-7.18Z" />
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                        </svg>
+                        <svg data-password-icon="visible" aria-hidden="true" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="1.75">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.5 19.5 19.5" />
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="M10.59 10.59A3 3 0 0 0 13.41 13.41" />
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="M9.35 5.37A10.3 10.3 0 0 1 12 4.5c4.64 0 8.58 3.01 9.96 7.18a1 1 0 0 1 0 .64 10.5 10.5 0 0 1-2.58 4.19" />
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="M6.23 6.23A10.47 10.47 0 0 0 2.04 11.68a1 1 0 0 0 0 .64C3.42 16.49 7.36 19.5 12 19.5c1.94 0 3.72-.52 5.25-1.41" />
+                        </svg>
+                    </button>
+                </div>
+                <span asp-validation-for="Input.Password" class="mt-1 block text-sm text-red-300"></span>
+            </div>
+
+            <div>
+                <label asp-for="Input.ConfirmPassword" class="mb-2 block text-sm text-muted-foreground">Confirmar
+                    contraseña</label>
+                    <div class="compute-password-field">
+                        <input asp-for="Input.ConfirmPassword" autocomplete="new-password"
+                               class="compute-input compute-input-with-toggle" />
+                        <button type="button" class="compute-password-toggle"
+                                data-password-toggle="@Html.IdFor(m => m.Input.ConfirmPassword)" aria-label="Ver contraseña"
+                                aria-pressed="false">
+                            <svg data-password-icon="hidden" aria-hidden="true" viewBox="0 0 24 24" fill="none"
+                                 stroke="currentColor" stroke-width="1.75">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                      d="M2.04 12.32a1 1 0 0 1 0-.64C3.42 7.51 7.36 4.5 12 4.5s8.58 3.01 9.96 7.18a1 1 0 0 1 0 .64C20.58 16.49 16.64 19.5 12 19.5s-8.58-3.01-9.96-7.18Z" />
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                      d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                            </svg>
+                            <svg data-password-icon="visible" aria-hidden="true" viewBox="0 0 24 24" fill="none"
+                                 stroke="currentColor" stroke-width="1.75">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.5 19.5 19.5" />
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                      d="M10.59 10.59A3 3 0 0 0 13.41 13.41" />
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                      d="M9.35 5.37A10.3 10.3 0 0 1 12 4.5c4.64 0 8.58 3.01 9.96 7.18a1 1 0 0 1 0 .64 10.5 10.5 0 0 1-2.58 4.19" />
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                      d="M6.23 6.23A10.47 10.47 0 0 0 2.04 11.68a1 1 0 0 0 0 .64C3.42 16.49 7.36 19.5 12 19.5c1.94 0 3.72-.52 5.25-1.41" />
+                            </svg>
+                        </button>
+                    </div>
+                    <span asp-validation-for="Input.ConfirmPassword" class="mt-1 block text-sm text-red-300"></span>
+                </div>
+            </div>
+
+            <button id="registerSubmit" type="submit" class="compute-button w-full">Registrarse</button>
+
+            <div class="border-t border-foreground/10 pt-5 text-center text-sm text-muted-foreground">
+                Ya tienes cuenta?
+                <a asp-page="./Login" asp-route-returnUrl="@Model.ReturnUrl"
+                   class="font-medium text-foreground transition hover:text-muted-foreground">Iniciar sesión</a>
+            </div>
+        </form>
+    </div>
+
+    @section Scripts {
+        <partial name="_ValidationScriptsPartial" />
+    }

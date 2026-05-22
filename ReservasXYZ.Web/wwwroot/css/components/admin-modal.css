@@ -1,0 +1,779 @@
+/* ── Admin Modal System ───────────────────────────────── */
+
+@keyframes adminModalFade {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes adminModalScale {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.admin-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    animation: adminModalFade 0.15s ease-out;
+}
+
+.admin-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+}
+
+.admin-modal-container {
+    position: relative;
+    display: flex;
+    min-height: 100%;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.admin-modal-panel {
+    position: relative;
+    width: 100%;
+    max-width: 32rem;
+    border-radius: 1.5rem;
+    background: white;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    animation: adminModalScale 0.15s ease-out;
+}
+
+.admin-modal-panel--wide {
+    max-width: 40rem;
+}
+
+.admin-modal-panel--narrow {
+    max-width: 26rem;
+}
+
+.admin-modal-header {
+    position: relative;
+    padding: 1.5rem 2.5rem 0.5rem 1.5rem;
+}
+
+.admin-modal-close {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.25rem;
+    height: calc(1.1rem * 1.25);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--muted-foreground);
+    cursor: pointer;
+    transition: color 0.15s ease;
+}
+
+.admin-modal-close:hover {
+    color: var(--foreground);
+}
+
+.admin-modal-close svg {
+    width: 1.1rem;
+    height: 1.1rem;
+}
+
+.admin-modal-title {
+    margin: 0;
+    color: var(--foreground);
+    font-size: 1.1rem;
+    font-weight: 700;
+    line-height: 1.25;
+}
+
+.admin-modal-subtitle {
+    margin: 0.25rem 0 0;
+    color: var(--muted-foreground);
+    font-size: 0.82rem;
+}
+
+.admin-modal-body {
+    padding: 1rem 1.5rem;
+}
+
+.admin-modal-body .admin-form-grid {
+    gap: 0.85rem;
+}
+
+/* ── Modal form grid ─────────────────────────────────── */
+
+.admin-modal-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.admin-modal-field {
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-modal-field--full {
+    grid-column: 1 / -1;
+}
+
+.admin-modal-label--checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: 0;
+    cursor: pointer;
+    color: var(--foreground);
+}
+
+.admin-modal-label--checkbox input[type="checkbox"] {
+    width: 1.1rem;
+    height: 1.1rem;
+    accent-color: var(--primary);
+    cursor: pointer;
+}
+
+@media (max-width: 480px) {
+    .admin-modal-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.admin-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.65rem;
+    border-top: 1px solid color-mix(in oklch, var(--foreground) 6%, transparent);
+    margin: 0 1.5rem;
+    padding: 1rem 0;
+}
+
+/* ── Modal form fields ───────────────────────────────── */
+
+.admin-modal-label {
+    display: block;
+    margin-bottom: 0.35rem;
+    color: var(--muted-foreground);
+    font-size: 0.69rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.admin-modal-input {
+    width: 100%;
+    height: 2.5rem;
+    border: 1px solid color-mix(in oklch, var(--foreground) 12%, transparent);
+    border-radius: 0.75rem;
+    background: #f9fafb;
+    color: var(--foreground);
+    font-family: inherit;
+    font-size: 0.875rem;
+    padding: 0 0.875rem;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.admin-modal-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--primary) 15%, transparent);
+}
+
+.admin-modal-input::placeholder {
+    color: var(--muted-foreground);
+    opacity: 0.6;
+}
+
+textarea.admin-modal-input {
+    height: auto;
+    min-height: 5rem;
+    padding: 0.65rem 0.875rem;
+    resize: none;
+}
+
+select.admin-modal-input {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%236b7280'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.168l3.71-3.938a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06Z' clip-rule='evenodd'/%3E%3C/svg%3E");
+    background-position: right 0.65rem center;
+    background-repeat: no-repeat;
+    background-size: 1rem;
+    padding-right: 2rem;
+}
+
+.admin-modal-field .custom-select--standalone .custom-select-trigger {
+    height: 2.5rem;
+    min-height: 2.5rem;
+    border: 1px solid color-mix(in oklch, var(--foreground) 12%, transparent);
+    border-radius: 0.75rem;
+    background: #f9fafb;
+    padding: 0 0.875rem;
+    font-size: 0.875rem;
+}
+
+.admin-modal-field .custom-select--standalone .custom-select-trigger:hover,
+.admin-modal-field .custom-select--standalone.is-open .custom-select-trigger {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--primary) 15%, transparent);
+}
+
+.admin-modal-field-error {
+    margin-top: 0.25rem;
+    color: #dc2626;
+    font-size: 0.75rem;
+}
+
+.admin-modal-checkbox-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding-block: 0.35rem;
+}
+
+.admin-modal-checkbox {
+    width: 1.1rem;
+    height: 1.1rem;
+    border: 1.5px solid var(--admin-border-strong);
+    border-radius: 0.3rem;
+    accent-color: var(--primary);
+    cursor: pointer;
+}
+
+.admin-modal-checkbox-text {
+    color: var(--foreground);
+    font-size: 0.86rem;
+    cursor: pointer;
+}
+
+/* ── Modal buttons ───────────────────────────────────── */
+
+.admin-modal-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    border: 0;
+    border-radius: 999px;
+    font-size: 0.84rem;
+    font-weight: 600;
+    padding: 0.6rem 1.25rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.admin-modal-btn:disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.admin-modal-btn--cancel {
+    background: transparent;
+    color: var(--muted-foreground);
+}
+
+.admin-modal-btn--cancel:hover {
+    background: color-mix(in oklch, var(--foreground) 5%, transparent);
+    color: var(--foreground);
+}
+
+.admin-modal-btn--primary {
+    background: var(--primary);
+    color: var(--primary-foreground);
+}
+
+.admin-modal-btn--primary:hover {
+    opacity: 0.9;
+}
+
+.admin-modal-btn--danger {
+    background: #dc2626;
+    color: white;
+}
+
+.admin-modal-btn--danger:hover {
+    background: #b91c1c;
+}
+
+.admin-modal-btn svg {
+    width: 1rem;
+    height: 1rem;
+    flex: none;
+}
+
+@keyframes adminSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.admin-modal-spinner {
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid transparent;
+    border-top-color: currentColor;
+    border-radius: 999px;
+    animation: adminSpin 0.6s linear infinite;
+}
+
+/* ── Confirm dialog ──────────────────────────────────── */
+
+.admin-confirm-body {
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.admin-confirm-icon {
+    display: flex;
+    width: 3rem;
+    height: 3rem;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    border-radius: 999px;
+}
+
+.admin-confirm-icon--danger {
+    background: color-mix(in oklch, #dc2626 10%, white);
+    color: #dc2626;
+}
+
+.admin-confirm-icon--warning {
+    background: color-mix(in oklch, #f59e0b 12%, white);
+    color: #d97706;
+}
+
+.admin-confirm-icon svg {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+.admin-confirm-title {
+    margin: 0;
+    color: var(--foreground);
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.admin-confirm-desc {
+    margin: 0.5rem 0 0;
+    color: var(--muted-foreground);
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.admin-confirm-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+    margin-top: 1.5rem;
+}
+
+/* ── Admin Table Enterprise ──────────────────────────── */
+
+.admin-table-shell {
+    border: 1px solid color-mix(in oklch, var(--foreground) 6%, transparent);
+    border-radius: 1rem;
+    background: white;
+    overflow: hidden;
+}
+
+.admin-table-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid color-mix(in oklch, var(--foreground) 5%, transparent);
+}
+
+.admin-table-search {
+    position: relative;
+    flex: 1;
+    min-width: 10rem;
+    max-width: 18rem;
+}
+
+.admin-table-search__icon,
+.admin-table-search>svg {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0.95rem;
+    height: 0.95rem;
+    color: var(--muted-foreground);
+    pointer-events: none;
+}
+
+.admin-table-search__input,
+.admin-table-search>input {
+    width: 100%;
+    height: 2.25rem;
+    border: 1px solid color-mix(in oklch, var(--foreground) 10%, transparent);
+    border-radius: 0.5rem;
+    background: #f9fafb;
+    color: var(--foreground);
+    font-size: 0.82rem;
+    padding: 0 0.75rem 0 2.25rem;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.admin-table-search__input:focus,
+.admin-table-search>input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--primary) 12%, transparent);
+}
+
+.admin-table-search__input::placeholder,
+.admin-table-search>input::placeholder {
+    color: var(--muted-foreground);
+    opacity: 0.55;
+}
+
+.admin-table-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 0.875rem;
+}
+
+.admin-table thead tr {
+    border-bottom: 1px solid color-mix(in oklch, var(--foreground) 6%, transparent);
+}
+
+.admin-table th {
+    padding: 0.75rem 1.25rem;
+    color: var(--muted-foreground);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.admin-table tbody tr {
+    border-top: 1px solid color-mix(in oklch, var(--foreground) 4%, transparent);
+    transition: background-color 0.12s ease;
+}
+
+.admin-table tbody tr:first-child {
+    border-top: none;
+}
+
+.admin-table tbody tr:hover {
+    background: #fafafa;
+}
+
+.admin-table td {
+    padding: 0.85rem 1.25rem;
+    color: var(--muted-foreground);
+    vertical-align: middle;
+}
+
+.admin-table td:first-child {
+    color: var(--foreground);
+    font-weight: 600;
+}
+
+.admin-table .cell-muted {
+    color: var(--muted-foreground);
+}
+
+.admin-table .cell-bold {
+    color: var(--foreground);
+    font-weight: 600;
+}
+
+.admin-table .cell-mono {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+}
+
+.admin-table .cell-actions {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.admin-table .cell-hide-mobile {
+    display: none;
+}
+
+.admin-table-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 3rem 1rem;
+    color: var(--muted-foreground);
+}
+
+.admin-table-empty__icon {
+    display: flex;
+    width: 2.5rem;
+    height: 2.5rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.65rem;
+    background: color-mix(in oklch, var(--primary) 8%, transparent);
+    color: var(--primary);
+}
+
+.admin-table-empty__icon svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+.admin-table-empty__text {
+    font-size: 0.875rem;
+}
+
+.admin-table-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    border-top: 1px solid color-mix(in oklch, var(--foreground) 5%, transparent);
+    padding: 0.75rem 1.25rem;
+}
+
+.admin-table-footer__info {
+    color: var(--muted-foreground);
+    font-size: 0.78rem;
+}
+
+/* ── Row action buttons ──────────────────────────────── */
+
+.admin-row-action {
+    display: inline-flex;
+    width: 1.85rem;
+    height: 1.85rem;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid color-mix(in oklch, var(--foreground) 10%, transparent);
+    border-radius: 0.45rem;
+    background: transparent;
+    color: var(--muted-foreground);
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.12s ease;
+}
+
+.admin-row-action:hover {
+    border-color: color-mix(in oklch, var(--primary) 35%, transparent);
+    background: color-mix(in oklch, var(--primary) 6%, transparent);
+    color: var(--primary);
+}
+
+.admin-row-action--danger:hover {
+    border-color: color-mix(in oklch, #dc2626 25%, transparent);
+    background: color-mix(in oklch, #dc2626 6%, transparent);
+    color: #dc2626;
+}
+
+.admin-row-action svg {
+    width: 0.9rem;
+    height: 0.9rem;
+}
+
+/* ── Page header ─────────────────────────────────────── */
+
+.admin-page-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 1.5rem;
+    margin-bottom: 1.25rem;
+}
+
+.admin-page-header__left {
+    min-width: 0;
+}
+
+.admin-page-header__title {
+    margin: 0;
+    color: var(--foreground);
+    font-family: var(--font-display);
+    font-size: clamp(1.3rem, 2.5vw, 1.75rem);
+    font-weight: 600;
+    line-height: 1.15;
+}
+
+.admin-page-header__subtitle {
+    margin: 0.2rem 0 0;
+    color: var(--muted-foreground);
+    font-size: 0.84rem;
+}
+
+.admin-page-header__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.admin-page-header__metrics {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+.admin-page-header__separator {
+    width: 1px;
+    height: 2.5rem;
+    background: var(--admin-border);
+}
+
+.admin-page-header__metric {
+    display: grid;
+    gap: 0.2rem;
+    text-align: right;
+}
+
+.admin-page-header__metric span {
+    color: var(--muted-foreground);
+    font-size: 0.78rem;
+    line-height: 1.35;
+}
+
+.admin-page-header__metric strong {
+    color: var(--foreground);
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 400;
+    line-height: 1;
+}
+
+@media (max-width: 639px) {
+    .admin-page-header__metrics {
+        justify-content: space-between;
+        width: 100%;
+    }
+
+    .admin-page-header__metric {
+        text-align: left;
+    }
+}
+
+.admin-page-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    border: 0;
+    border-radius: 999px;
+    background: var(--primary);
+    color: var(--primary-foreground);
+    font-size: 0.82rem;
+    font-weight: 650;
+    padding: 0.55rem 1.15rem;
+    cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.admin-page-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.admin-page-btn svg {
+    width: 0.95rem;
+    height: 0.95rem;
+    flex: none;
+}
+
+.admin-page-btn--outline {
+    border: 1px solid color-mix(in oklch, var(--foreground) 13%, transparent);
+    background: transparent;
+    color: var(--foreground);
+}
+
+.admin-page-btn--outline:hover {
+    opacity: 1;
+    border-color: color-mix(in oklch, var(--primary) 35%, transparent);
+    background: color-mix(in oklch, var(--primary) 6%, transparent);
+}
+
+/* ── Status badges ───────────────────────────────────── */
+
+.admin-badge {
+    display: inline-flex;
+    width: fit-content;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    padding: 0.28rem 0.62rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.admin-badge--active {
+    background: color-mix(in oklch, #16a34a 12%, transparent);
+    color: #166534;
+}
+
+.admin-badge--inactive {
+    background: color-mix(in oklch, #dc2626 10%, transparent);
+    color: #b91c1c;
+}
+
+.admin-badge--pending {
+    background: color-mix(in oklch, #d97706 12%, transparent);
+    color: #92400e;
+}
+
+.admin-badge--info {
+    background: color-mix(in oklch, #2563eb 10%, transparent);
+    color: #1e40af;
+}
+
+/* ── Responsive table ────────────────────────────────── */
+
+@media (min-width: 768px) {
+    .admin-table .cell-hide-mobile {
+        display: table-cell;
+    }
+}
+
+/* ── Validation summary inside modal ─────────────────── */
+
+.admin-modal-validation:not(:empty) {
+    margin-bottom: 0.75rem;
+    border: 1px solid color-mix(in oklch, #dc2626 18%, transparent);
+    border-radius: 0.5rem;
+    background: color-mix(in oklch, #dc2626 5%, white);
+    color: #b91c1c;
+    padding: 0.65rem 0.85rem;
+    font-size: 0.8rem;
+}

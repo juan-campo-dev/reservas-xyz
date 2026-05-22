@@ -1,0 +1,275 @@
+﻿/* availability-feature, buttons, app-modal, headings, modal headers (1139-1427) */
+
+.availability-feature-image {
+  opacity: 1;
+  transform: scale(1.02);
+  transform-origin: center;
+}
+
+.availability-feature-overlay {
+  background:
+    linear-gradient(180deg,
+      rgba(15, 10, 5, 0.06) 0%,
+      rgba(15, 10, 5, 0) 36%,
+      rgba(15, 10, 5, 0.68) 100%),
+    linear-gradient(90deg,
+      rgba(15, 10, 5, 0.32) 0%,
+      rgba(15, 10, 5, 0.10) 46%,
+      transparent 100%);
+}
+
+.compute-button {
+  cursor: pointer;
+  display: inline-flex;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  padding: 0.75rem 1.35rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+
+.compute-button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.public-register-button {
+  height: 2.375rem;
+  min-height: 2.375rem;
+  padding: 0.45rem 1rem;
+  font-size: 0.8125rem;
+}
+
+.compute-button-outline {
+  cursor: pointer;
+  display: inline-flex;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklch, var(--primary) 40%, transparent);
+  color: var(--primary);
+  padding: 0.75rem 1.35rem;
+  font-size: 0.875rem;
+  transition: background 0.25s ease, transform 0.25s ease;
+}
+
+.compute-button-outline:hover {
+  background: color-mix(in oklch, var(--primary) 8%, transparent);
+  transform: translateY(-1px);
+}
+
+.compute-button-outline-light {
+  border-color: rgb(255 255 255 / 0.35);
+  color: rgb(255 255 255);
+}
+
+.compute-button-outline-light:hover {
+  background: rgb(255 255 255 / 0.1);
+}
+
+/* â”€â”€ App modals â”€â”€ */
+.app-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: none;
+}
+
+.app-modal-overlay.is-open {
+  display: block;
+}
+
+.app-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(9, 12, 18, 0.62);
+  backdrop-filter: blur(10px);
+}
+
+.app-modal-scroll {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-height: 100svh;
+  align-items: flex-start;
+  justify-content: center;
+  overflow-y: auto;
+  padding: clamp(1rem, 3vw, 1.5rem);
+}
+
+.app-modal-panel {
+  width: min(100%, 64rem);
+  margin-block: auto;
+  display: flex;
+  overflow: visible;
+  background: transparent;
+  color: inherit;
+  box-shadow: none;
+}
+
+.app-modal-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: 0 0 2.5rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklch, var(--foreground) 8%, transparent);
+  background: color-mix(in oklch, var(--foreground) 4%, transparent);
+  color: var(--muted-foreground);
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.app-modal-close:hover,
+.app-modal-close:focus-visible {
+  border-color: color-mix(in oklch, var(--foreground) 16%, transparent);
+  background: color-mix(in oklch, var(--foreground) 8%, transparent);
+  color: var(--foreground);
+}
+
+.app-modal-close svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.app-modal-loading,
+.app-modal-error {
+  display: flex;
+  min-height: 14rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 2rem;
+  text-align: center;
+  color: var(--muted-foreground);
+}
+
+.app-modal-error {
+  display: block;
+}
+
+.availability-modal {
+  padding: 1.5rem 3.5rem 1.5rem 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .availability-modal {
+    padding: 1.75rem 3.5rem 1.75rem 1.75rem;
+  }
+}
+
+.app-modal-card {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  overflow: visible;
+}
+
+.app-modal-card .availability-modal-form {
+  min-height: 0;
+  overflow: visible;
+}
+
+.app-modal-card .availability-modal-form {
+  margin-top: 0;
+}
+
+.app-modal-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.app-compact-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.75rem;
+  min-width: 0;
+}
+
+.app-compact-heading--center {
+  justify-content: center;
+}
+
+.app-compact-heading--solo {
+  gap: 0;
+}
+
+.app-compact-heading-title {
+  margin: 0;
+  min-width: 0;
+  font-family: var(--font-display, inherit);
+  font-size: clamp(1.7rem, 3.6vw, 2.2rem);
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  color: var(--foreground);
+}
+
+.app-auth-header {
+  margin-bottom: 1.75rem;
+}
+
+.app-auth-header--center {
+  text-align: center;
+}
+
+.availability-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid color-mix(in oklch, var(--foreground) 8%, transparent);
+  padding-bottom: 1.25rem;
+}
+
+.availability-modal-header>div {
+  flex: 1;
+  min-width: 0;
+}
+
+.availability-modal-form {
+  margin-top: 1.25rem;
+}
+
+.availability-modal-fields {
+  display: grid;
+  gap: 0.875rem;
+}
+
+.availability-modal-fields .sf-field {
+  min-height: 4.75rem;
+  border-radius: 1rem;
+  border: 1px solid color-mix(in oklch, var(--foreground) 10%, transparent);
+  background: color-mix(in oklch, var(--background) 70%, transparent);
+  padding: 0.875rem 1rem;
+}
+
+.availability-modal-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  border-top: 1px solid color-mix(in oklch, var(--foreground) 8%, transparent);
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+}
+
+.availability-modal-error {
+  margin-bottom: 1rem;
+  border-radius: 1rem;
+  background: #fef2f2;
+  color: #b91c1c;
+  padding: 0.875rem 1rem;
+  font-size: 0.875rem;
+}

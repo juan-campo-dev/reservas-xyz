@@ -1,0 +1,39 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+
+## Node
+**/node_modules/
+
+## Tailwind output
+wwwroot/css/output.css
+
+## User secrets
+appsettings.Development.json
+
+## OS
+Thumbs.db
+.DS_Store
+
+## IDE
+*.swp
+*.swo
+.idea/
+
+## Docs / audit / AI instructions
+docs/
+.github/copilot-instructions.md
+
+## Deploy secrets
+.env
+
+## Tools (SQL Server installers)
+tools/
+
+## Git backup
+.git-backup/

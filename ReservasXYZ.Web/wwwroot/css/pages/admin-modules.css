@@ -1,0 +1,871 @@
+/* ──────────────────────────────────────────────────────────
+   Admin CRUD Modules — Unified design system
+   Matches dashboard + reservations visual language
+   ────────────────────────────────────────────────────────── */
+
+.admin-module-shell {
+    display: grid;
+    width: min(100%, 74rem);
+    margin-inline: auto;
+    gap: 1.2rem;
+}
+
+/* ── Header ─────────────────────────────────────────────── */
+
+.admin-module-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem 1.5rem;
+    border: 1px solid var(--admin-border);
+    border-radius: var(--admin-radius);
+    background:
+        radial-gradient(circle at top right, color-mix(in oklch, var(--primary) 8%, transparent), transparent 34%),
+        var(--admin-surface);
+    box-shadow: var(--admin-shadow);
+    padding: clamp(1rem, 2vw, 1.4rem) clamp(1.1rem, 2.4vw, 1.6rem);
+}
+
+.admin-module-header__left {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    min-width: 0;
+}
+
+.admin-module-header__icon {
+    display: flex;
+    width: 2.6rem;
+    height: 2.6rem;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    border-radius: var(--admin-radius);
+    background: color-mix(in oklch, var(--primary) 10%, transparent);
+    color: var(--primary);
+}
+
+.admin-module-header__icon svg {
+    width: 1.3rem;
+    height: 1.3rem;
+}
+
+.admin-module-header__text {
+    min-width: 0;
+}
+
+.admin-module-header__title {
+    color: var(--foreground);
+    font-family: var(--font-display);
+    font-size: clamp(1.15rem, 2vw, 1.45rem);
+    font-weight: 500;
+    line-height: 1.1;
+}
+
+.admin-module-header__subtitle {
+    margin-top: 0.2rem;
+    color: var(--muted-foreground);
+    font-size: 0.8rem;
+    line-height: 1.45;
+}
+
+.admin-module-btn {
+    display: inline-flex;
+    min-height: 2.35rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    border: 0;
+    border-radius: 999px;
+    background: var(--primary);
+    color: var(--primary-foreground);
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 0.5rem 1.15rem;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.admin-module-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.admin-module-btn svg {
+    width: 0.95rem;
+    height: 0.95rem;
+    flex: none;
+}
+
+/* ── Stats strip ────────────────────────────────────────── */
+
+.admin-module-stats {
+    display: grid;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.admin-module-stats+.admin-table-shell {
+    margin-top: 0.6rem;
+}
+
+.admin-module-stat {
+    position: relative;
+    border: 1px solid var(--admin-border);
+    border-radius: var(--admin-radius);
+    background: var(--admin-surface);
+    padding: 1.25rem;
+    box-shadow: var(--admin-shadow);
+    transition: box-shadow 0.2s ease;
+}
+
+.admin-module-stat:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(0, 0, 0, 0.04);
+}
+
+.admin-module-stat__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.admin-module-stat__label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #6b7280;
+}
+
+.admin-module-stat__indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.admin-module-stat__icon {
+    width: 0.875rem;
+    height: 0.875rem;
+    flex: none;
+}
+
+.admin-module-stat__pct {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: #9ca3af;
+    font-variant-numeric: tabular-nums;
+}
+
+.admin-module-stat__value {
+    display: block;
+    margin-top: 0.75rem;
+    font-family: var(--font-display);
+    font-size: 2.15rem;
+    font-weight: 400;
+    color: var(--foreground);
+    letter-spacing: -0.025em;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+}
+
+.admin-module-stat__bar {
+    margin-top: 1rem;
+    height: 3px;
+    width: 100%;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.admin-module-stat__bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.7s ease-out;
+}
+
+/* Stat color variants */
+
+.admin-module-stat--blue .admin-module-stat__icon {
+    color: #2563eb;
+}
+
+.admin-module-stat--blue .admin-module-stat__bar {
+    background: #dbeafe;
+}
+
+.admin-module-stat--blue .admin-module-stat__bar-fill {
+    background: #60a5fa;
+}
+
+.admin-module-stat--green .admin-module-stat__icon {
+    color: #059669;
+}
+
+.admin-module-stat--green .admin-module-stat__bar {
+    background: #d1fae5;
+}
+
+.admin-module-stat--green .admin-module-stat__bar-fill {
+    background: #34d399;
+}
+
+.admin-module-stat--orange .admin-module-stat__icon {
+    color: #ea580c;
+}
+
+.admin-module-stat--orange .admin-module-stat__bar {
+    background: #ffedd5;
+}
+
+.admin-module-stat--orange .admin-module-stat__bar-fill {
+    background: #fb923c;
+}
+
+.admin-module-stat--yellow .admin-module-stat__icon {
+    color: #ca8a04;
+}
+
+.admin-module-stat--yellow .admin-module-stat__bar {
+    background: #fef9c3;
+}
+
+.admin-module-stat--yellow .admin-module-stat__bar-fill {
+    background: #facc15;
+}
+
+.admin-module-stat--purple .admin-module-stat__icon {
+    color: #7c3aed;
+}
+
+.admin-module-stat--purple .admin-module-stat__bar {
+    background: #ede9fe;
+}
+
+.admin-module-stat--purple .admin-module-stat__bar-fill {
+    background: #a78bfa;
+}
+
+/* ── Cards grid ─────────────────────────────────────────── */
+
+.admin-module-grid {
+    display: grid;
+    gap: 0.85rem;
+}
+
+.admin-module-card {
+    display: grid;
+    gap: 0.7rem;
+    border: 1px solid var(--admin-border);
+    border-radius: var(--admin-radius);
+    background: var(--admin-surface);
+    box-shadow: var(--admin-shadow);
+    padding: 1.1rem;
+    transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.admin-module-card:hover {
+    border-color: color-mix(in oklch, var(--primary) 25%, transparent);
+    box-shadow: 0 18px 40px color-mix(in oklch, var(--foreground) 9%, transparent);
+    transform: translateY(-1px);
+}
+
+.admin-module-card__head {
+    display: flex;
+    min-width: 0;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.admin-module-card__title {
+    color: var(--foreground);
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 500;
+    line-height: 1.15;
+}
+
+.admin-module-card__meta {
+    margin-top: 0.25rem;
+    color: var(--muted-foreground);
+    font-size: 0.82rem;
+    line-height: 1.4;
+}
+
+.admin-module-card__desc {
+    color: var(--muted-foreground);
+    font-size: 0.82rem;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.admin-module-card__details {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem 0.85rem;
+    color: var(--muted-foreground);
+    font-size: 0.82rem;
+}
+
+.admin-module-card__detail-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.admin-module-card__detail-item svg {
+    width: 0.9rem;
+    height: 0.9rem;
+    flex: none;
+    opacity: 0.55;
+}
+
+.admin-module-card__price {
+    color: var(--foreground);
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    font-weight: 400;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.admin-module-card__price-unit {
+    color: var(--muted-foreground);
+    font-size: 0.75rem;
+    font-weight: 400;
+}
+
+.admin-module-card__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-top: 1px solid var(--admin-border);
+    padding-top: 0.75rem;
+}
+
+/* ── List card variant ──────────────────────────────────── */
+
+.admin-module-list {
+    display: grid;
+    gap: 0.7rem;
+}
+
+.admin-module-list-item {
+    display: grid;
+    gap: 0.65rem;
+    align-items: center;
+    border: 1px solid var(--admin-border);
+    border-radius: var(--admin-radius);
+    background: var(--admin-surface);
+    box-shadow: var(--admin-shadow);
+    padding: 1rem 1.1rem;
+    transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.admin-module-list-item:hover {
+    border-color: color-mix(in oklch, var(--primary) 25%, transparent);
+    box-shadow: 0 14px 32px color-mix(in oklch, var(--foreground) 8%, transparent);
+    transform: translateY(-1px);
+}
+
+.admin-module-list-item__body {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.admin-module-list-item__info {
+    min-width: 0;
+}
+
+.admin-module-list-item__right {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    flex: none;
+}
+
+.admin-module-list-item__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+/* ── Action links ───────────────────────────────────────── */
+
+.admin-action-link {
+    display: inline-flex;
+    min-height: 1.85rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    border: 1px solid var(--admin-border-strong);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--foreground);
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.35rem 0.75rem;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background 0.18s ease, border-color 0.18s ease;
+}
+
+.admin-action-link:hover {
+    border-color: color-mix(in oklch, var(--primary) 35%, transparent);
+    background: color-mix(in oklch, var(--primary) 6%, transparent);
+}
+
+.admin-action-link svg {
+    width: 0.82rem;
+    height: 0.82rem;
+    flex: none;
+}
+
+.admin-action-link--danger {
+    border-color: color-mix(in oklch, #dc2626 20%, transparent);
+    color: #dc2626;
+}
+
+.admin-action-link--danger:hover {
+    border-color: #dc2626;
+    background: color-mix(in oklch, #dc2626 6%, transparent);
+}
+
+/* ── Status badge ───────────────────────────────────────── */
+
+.admin-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    padding: 0.3rem 0.65rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.admin-status-badge--active {
+    border-color: color-mix(in oklch, #16a34a 22%, transparent);
+    background: color-mix(in oklch, #16a34a 9%, white);
+    color: #166534;
+}
+
+.admin-status-badge--inactive {
+    border-color: color-mix(in oklch, #dc2626 18%, transparent);
+    background: color-mix(in oklch, #dc2626 7%, white);
+    color: #b91c1c;
+}
+
+.admin-status-dot {
+    width: 0.38rem;
+    height: 0.38rem;
+    border-radius: 999px;
+    background: currentColor;
+    flex: none;
+}
+
+/* ── Tag / chip ─────────────────────────────────────────── */
+
+.admin-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    border: 1px solid var(--admin-border);
+    border-radius: 999px;
+    background: var(--admin-surface);
+    color: var(--muted-foreground);
+    font-size: 0.72rem;
+    font-weight: 650;
+    padding: 0.25rem 0.55rem;
+    white-space: nowrap;
+}
+
+.admin-tag svg {
+    width: 0.8rem;
+    height: 0.8rem;
+    flex: none;
+    opacity: 0.55;
+}
+
+/* ── Multiplier badge ───────────────────────────────────── */
+
+.admin-multiplier-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    border: 1px solid color-mix(in oklch, var(--primary) 20%, transparent);
+    border-radius: 999px;
+    background: color-mix(in oklch, var(--primary) 7%, white);
+    color: var(--primary);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 750;
+    padding: 0.3rem 0.6rem;
+    white-space: nowrap;
+}
+
+/* ── Form shell ─────────────────────────────────────────── */
+
+.admin-form-shell {
+    display: grid;
+    width: min(100%, 42rem);
+    margin-inline: auto;
+    gap: 1.2rem;
+}
+
+.admin-form-back {
+    display: inline-flex;
+    width: fit-content;
+    align-items: center;
+    gap: 0.35rem;
+    color: color-mix(in oklch, var(--primary) 86%, var(--foreground));
+    font-size: 0.84rem;
+    font-weight: 650;
+    text-decoration: none;
+    transition: color 0.18s ease;
+}
+
+.admin-form-back:hover {
+    color: var(--primary);
+}
+
+.admin-page-header__title .admin-form-back,
+h1 .admin-form-back,
+h2 .admin-form-back {
+    font-size: inherit;
+    font-weight: inherit;
+    font-family: inherit;
+    line-height: inherit;
+    gap: 0.6rem;
+}
+
+.admin-page-header__title .admin-form-back svg,
+h1 .admin-form-back svg,
+h2 .admin-form-back svg {
+    width: 0.85em;
+    height: 0.85em;
+}
+
+.admin-form-title {
+    margin-top: 0.5rem;
+    color: var(--foreground);
+    font-family: var(--font-display);
+    font-size: clamp(1.65rem, 3vw, 2.25rem);
+    font-weight: 400;
+    line-height: 1;
+}
+
+.admin-form-panel {
+    border: 1px solid var(--admin-border);
+    border-radius: var(--admin-radius);
+    background: var(--admin-surface);
+    box-shadow: var(--admin-shadow);
+    padding: clamp(1.1rem, 2.4vw, 1.5rem);
+}
+
+.admin-form-section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    border-bottom: 1px solid var(--admin-border);
+    padding-bottom: 0.8rem;
+    margin-bottom: 1rem;
+}
+
+.admin-form-section-heading p:first-child {
+    color: var(--foreground);
+    font-size: 0.95rem;
+    font-weight: 650;
+}
+
+.admin-form-section-heading p:last-child {
+    color: var(--muted-foreground);
+    font-size: 0.8rem;
+}
+
+.admin-form-grid {
+    display: grid;
+    gap: 0.95rem;
+}
+
+.admin-form-field {
+    display: grid;
+    gap: 0.4rem;
+}
+
+.admin-form-field--wide {
+    grid-column: 1 / -1;
+}
+
+.admin-form-label {
+    color: var(--muted-foreground);
+    font-size: 0.82rem;
+    font-weight: 650;
+}
+
+.admin-form-input {
+    width: 100%;
+    min-height: 2.75rem;
+    border: 1px solid var(--admin-border-strong);
+    border-radius: var(--app-radius-control);
+    background: var(--card);
+    color: var(--foreground);
+    font-family: inherit;
+    font-size: 0.88rem;
+    padding: 0.65rem 0.85rem;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.admin-form-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--primary) 12%, transparent);
+    outline: none;
+}
+
+.admin-form-input::placeholder {
+    color: var(--muted-foreground);
+    opacity: 0.6;
+}
+
+textarea.admin-form-input {
+    min-height: 6rem;
+    resize: none;
+}
+
+select.admin-form-input {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%236b7280'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.168l3.71-3.938a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06Z' clip-rule='evenodd'/%3E%3C/svg%3E");
+    background-position: right 0.75rem center;
+    background-repeat: no-repeat;
+    background-size: 1rem;
+    padding-right: 2.25rem;
+}
+
+.admin-form-field .custom-select--standalone .custom-select-trigger,
+.admin-modal-field .custom-select--standalone .custom-select-trigger {
+    min-height: 2.75rem;
+    border: 1px solid var(--admin-border-strong);
+    border-radius: var(--app-radius-control);
+    background: var(--card);
+    padding: 0.65rem 0.85rem;
+    font-size: 0.88rem;
+}
+
+.admin-form-field .custom-select--standalone .custom-select-trigger:hover,
+.admin-form-field .custom-select--standalone.is-open .custom-select-trigger,
+.admin-modal-field .custom-select--standalone .custom-select-trigger:hover,
+.admin-modal-field .custom-select--standalone.is-open .custom-select-trigger {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--primary) 12%, transparent);
+}
+
+.admin-form-field .custom-select-panel,
+.admin-modal-field .custom-select-panel {
+    width: max-content;
+    min-width: var(--custom-select-panel-width, 12rem);
+    max-width: calc(100vw - 2rem);
+}
+
+.admin-form-field .custom-select-option>span:first-child,
+.admin-modal-field .custom-select-option>span:first-child {
+    overflow: visible;
+    white-space: nowrap;
+    text-overflow: unset;
+}
+
+.admin-form-validation {
+    color: #b91c1c;
+    font-size: 0.78rem;
+}
+
+.admin-form-validation-summary:not(:empty) {
+    margin-bottom: 1rem;
+    border: 1px solid color-mix(in oklch, #dc2626 18%, transparent);
+    border-radius: var(--app-radius-control);
+    background: color-mix(in oklch, #dc2626 5%, white);
+    color: #b91c1c;
+    padding: 0.85rem 1rem;
+    font-size: 0.84rem;
+}
+
+.admin-form-actions {
+    display: flex;
+    gap: 0.65rem;
+    margin-top: 0.5rem;
+}
+
+.admin-form-submit {
+    display: inline-flex;
+    min-height: 2.65rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    border: 0;
+    border-radius: var(--app-radius-control);
+    background: var(--primary);
+    color: var(--primary-foreground);
+    font-size: 0.88rem;
+    font-weight: 700;
+    padding: 0.65rem 1.5rem;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.admin-form-submit:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.admin-form-submit svg {
+    width: 1rem;
+    height: 1rem;
+    flex: none;
+}
+
+.admin-form-cancel {
+    display: inline-flex;
+    min-height: 2.65rem;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--admin-border-strong);
+    border-radius: var(--app-radius-control);
+    background: transparent;
+    color: var(--foreground);
+    font-size: 0.88rem;
+    font-weight: 650;
+    padding: 0.65rem 1.5rem;
+    text-decoration: none;
+    transition: background 0.18s ease, border-color 0.18s ease;
+}
+
+.admin-form-cancel:hover {
+    border-color: color-mix(in oklch, var(--primary) 35%, transparent);
+    background: color-mix(in oklch, var(--primary) 6%, transparent);
+}
+
+.admin-form-checkbox-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding-block: 0.5rem;
+}
+
+.admin-form-checkbox {
+    width: 1.1rem;
+    height: 1.1rem;
+    border: 1.5px solid var(--admin-border-strong);
+    border-radius: 0.3rem;
+    accent-color: var(--primary);
+    cursor: pointer;
+}
+
+.admin-form-checkbox-text {
+    color: var(--foreground);
+    font-size: 0.88rem;
+    cursor: pointer;
+}
+
+/* ── Empty state ────────────────────────────────────────── */
+
+.admin-module-empty {
+    border: 1px solid var(--admin-border);
+    border-radius: var(--admin-radius);
+    background: var(--admin-surface);
+    box-shadow: var(--admin-shadow);
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+}
+
+.admin-module-empty__icon {
+    display: inline-flex;
+    width: 2.5rem;
+    height: 2.5rem;
+    align-items: center;
+    justify-content: center;
+    margin-inline: auto;
+    border-radius: var(--admin-radius);
+    background: color-mix(in oklch, var(--primary) 8%, transparent);
+    color: var(--primary);
+}
+
+.admin-module-empty__icon svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+.admin-module-empty__title {
+    margin-top: 0.85rem;
+    color: var(--foreground);
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    font-weight: 400;
+}
+
+.admin-module-empty__text {
+    margin-top: 0.4rem;
+    color: var(--muted-foreground);
+    font-size: 0.88rem;
+}
+
+/* ── Responsive ─────────────────────────────────────────── */
+
+@media (min-width: 640px) {
+    .admin-module-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .admin-module-stats--dashboard {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .admin-module-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .admin-form-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .admin-module-list-item {
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+}
+
+@media (min-width: 1024px) {
+    .admin-module-stats {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .admin-module-stats--dashboard {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .admin-module-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 639px) {
+    .admin-module-card__head {
+        flex-direction: column;
+        gap: 0.45rem;
+    }
+
+    .admin-module-list-item__body {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .admin-module-list-item__right {
+        width: 100%;
+        justify-content: space-between;
+    }
+}

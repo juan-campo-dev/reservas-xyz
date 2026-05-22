@@ -1,0 +1,29 @@
+@page
+@model RegisterConfirmationModel
+@{
+    ViewData["Title"] = "Confirma tu correo";
+}
+
+<div class="compute-card w-full max-w-[438px] rounded-3xl p-6 text-center lg:p-7">
+    <div class="app-auth-header app-auth-header--center">
+        <div class="app-compact-heading app-compact-heading--center app-compact-heading--solo">
+            <h1 class="app-compact-heading-title">Revisa tu correo</h1>
+        </div>
+    </div>
+    <p class="mt-4 text-sm leading-6 text-muted-foreground">
+        Enviamos el enlace de activación a:
+    </p>
+    <p class="mt-2 break-all rounded-xl bg-foreground/5 px-4 py-3 text-sm font-medium text-foreground">
+        @Model.Email
+    </p>
+    <p class="mt-4 text-sm leading-6 text-muted-foreground">
+        Revisa tu bandeja de entrada y haz clic en el enlace para activar tu cuenta.
+    </p>
+
+    <div class="mt-7 space-y-3">
+        <a asp-page="./Login" class="compute-button w-full">Entendido</a>
+        <a asp-page="./ResendEmailConfirmation" asp-route-email="@Model.Email" class="compute-button-outline w-full">
+            Reenviar confirmación
+        </a>
+    </div>
+</div>

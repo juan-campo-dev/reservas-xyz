@@ -1,0 +1,72 @@
+@model ReservasXYZ.Application.DTOs.UpdateAccommodationDto
+@{
+    ViewData["Title"] = "Editar Alojamiento";
+}
+
+<div class="admin-form-shell">
+    <div>
+        <a asp-action="Index" class="admin-form-back">← Volver a alojamientos</a>
+        <h2 class="admin-form-title">Editar alojamiento</h2>
+    </div>
+
+    <div class="admin-form-panel">
+        <div class="admin-form-section-heading">
+            <p>Datos del alojamiento</p>
+            <p>Actualizar datos</p>
+        </div>
+        <form asp-action="Edit" method="post">
+            <input type="hidden" asp-for="Id" />
+            <div asp-validation-summary="ModelOnly" class="admin-form-validation-summary"></div>
+            <div class="admin-form-grid">
+                <div class="admin-form-field admin-form-field--wide">
+                    <label asp-for="SiteId" class="admin-form-label">Sede</label>
+                    <select asp-for="SiteId" asp-items="ViewBag.Sites" class="admin-form-input" required>
+                        <option value="">Seleccionar...</option>
+                    </select>
+                    <span asp-validation-for="SiteId" class="admin-form-validation"></span>
+                </div>
+                <div class="admin-form-field">
+                    <label asp-for="Name" class="admin-form-label">Nombre</label>
+                    <input asp-for="Name" class="admin-form-input" required />
+                    <span asp-validation-for="Name" class="admin-form-validation"></span>
+                </div>
+                <div class="admin-form-field">
+                    <label asp-for="Type" class="admin-form-label">Tipo</label>
+                    <input asp-for="Type" class="admin-form-input" required />
+                    <span asp-validation-for="Type" class="admin-form-validation"></span>
+                </div>
+                <div class="admin-form-field">
+                    <label asp-for="TotalRooms" class="admin-form-label">Número de habitaciones</label>
+                    <input asp-for="TotalRooms" type="number" min="1" class="admin-form-input" required />
+                    <span asp-validation-for="TotalRooms" class="admin-form-validation"></span>
+                </div>
+                <div class="admin-form-field">
+                    <div class="admin-form-checkbox-wrap">
+                        <input asp-for="IsActive" type="checkbox" class="admin-form-checkbox" />
+                        <label asp-for="IsActive" class="admin-form-checkbox-text">Activo</label>
+                    </div>
+                </div>
+                <div class="admin-form-field admin-form-field--wide">
+                    <label asp-for="Description" class="admin-form-label">Descripción</label>
+                    <textarea asp-for="Description" rows="4" class="admin-form-input"></textarea>
+                    <span asp-validation-for="Description" class="admin-form-validation"></span>
+                </div>
+            </div>
+            <div class="admin-form-actions">
+                <button type="submit" class="admin-form-submit">
+                    <svg viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd"
+                              d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z"
+                              clip-rule="evenodd" />
+                    </svg>
+                    Actualizar
+                </button>
+                <a asp-action="Index" class="admin-form-cancel">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

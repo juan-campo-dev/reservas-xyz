@@ -1,0 +1,21 @@
+﻿@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+/* ──────────────────────────────────────────────────────────
+   Frontend Architecture — Phase 1 (CSS modular split)
+   Order matters: cascade replicates the original monolith.
+   ────────────────────────────────────────────────────────── */
+@import './base/foundation.css';
+@import './components/forms.css';
+@import './components/modal.css';
+@import './components/notifications.css';
+@import './pages/availability.css';
+@import './layout/admin.css';
+@import './layout/header.css';
+@import './components/site-card.css';
+@import './pages/availability-table.css';
+@import './pages/reservations.css';
+@import './pages/admin-modules.css';
+@import './components/admin-modal.css';

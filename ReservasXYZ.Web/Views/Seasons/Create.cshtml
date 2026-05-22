@@ -1,0 +1,60 @@
+@model ReservasXYZ.Application.DTOs.CreateSeasonDto
+@{
+    ViewData["Title"] = "Crear Temporada";
+}
+
+<div class="admin-form-shell">
+    <div>
+        <a asp-action="Index" class="admin-form-back">← Volver a temporadas</a>
+        <h2 class="admin-form-title">Nueva temporada</h2>
+    </div>
+
+    <div class="admin-form-panel">
+        <div class="admin-form-section-heading">
+            <p>Datos de la temporada</p>
+            <p>Campos obligatorios</p>
+        </div>
+        <form asp-action="Create" method="post">
+            <div asp-validation-summary="ModelOnly" class="admin-form-validation-summary"></div>
+            <div class="admin-form-grid">
+                <div class="admin-form-field admin-form-field--wide">
+                    <label asp-for="Name" class="admin-form-label">Nombre</label>
+                    <input asp-for="Name" placeholder="Alta temporada, Baja temporada, Especial..."
+                           class="admin-form-input" required />
+                    <span asp-validation-for="Name" class="admin-form-validation"></span>
+                </div>
+                <div class="admin-form-field">
+                    <label asp-for="StartDate" class="admin-form-label">Fecha inicial</label>
+                    <input asp-for="StartDate" type="date" class="admin-form-input" required />
+                    <span asp-validation-for="StartDate" class="admin-form-validation"></span>
+                </div>
+                <div class="admin-form-field">
+                    <label asp-for="EndDate" class="admin-form-label">Fecha final</label>
+                    <input asp-for="EndDate" type="date" class="admin-form-input" required />
+                    <span asp-validation-for="EndDate" class="admin-form-validation"></span>
+                </div>
+                <div class="admin-form-field">
+                    <label asp-for="PriceMultiplier" class="admin-form-label">Multiplicador</label>
+                    <input asp-for="PriceMultiplier" type="number" min="0" step="0.01" class="admin-form-input"
+                           required />
+                    <span asp-validation-for="PriceMultiplier" class="admin-form-validation"></span>
+                </div>
+            </div>
+            <div class="admin-form-actions">
+                <button type="submit" class="admin-form-submit">
+                    <svg viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd"
+                              d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z"
+                              clip-rule="evenodd" />
+                    </svg>
+                    Guardar
+                </button>
+                <a asp-action="Index" class="admin-form-cancel">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,37 @@
+@using System.Text.Encodings.Web
+@inject JavaScriptEncoder JsEncoder
+@{
+    var isModalFetchRequest = string.Equals(Context.Request.Headers["X-Requested-With"], "XMLHttpRequest",
+StringComparison.OrdinalIgnoreCase);
+    Layout = isModalFetchRequest ? "/Views/Shared/_Layout.cshtml" : null;
+}
+
+@if (isModalFetchRequest)
+{
+    <div data-auth-modal-body class="w-full">
+        @RenderBody()
+    </div>
+
+    @section Scripts {
+        @RenderSection("Scripts", required: false)
+    }
+}
+else
+{
+    var currentPath = Context.Request.Path + Context.Request.QueryString;
+    var safePath = JsEncoder.Encode(currentPath);
+    @RenderBody()
+    @RenderSection("Scripts", required: false)
+    <!DOCTYPE html>
+    <html>
+
+    <head>
+        <meta charset="UTF-8">
+    </head>
+
+    <body>
+        <script>window.location.replace('/?authPage=' + encodeURIComponent("@Html.Raw(safePath)"));</script>
+    </body>
+
+</html>
+}

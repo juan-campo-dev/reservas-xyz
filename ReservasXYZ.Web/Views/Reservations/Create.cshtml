@@ -1,0 +1,154 @@
+@model CreateReservationDto
+@{
+    ViewData["Title"] = "Confirmar reserva";
+    var room = ViewBag.Room as RoomDto;
+    var rooms = (ViewBag.Rooms as IEnumerable<RoomDto>)?.ToList() ?? (room is null ? new List<RoomDto>() : new List<RoomDto> { room });
+    var roomTotals = ViewBag.RoomTotals as IDictionary<int, decimal> ?? new Dictionary<int, decimal>();
+    var roomExtras = ViewBag.RoomExtras as IDictionary<int, (int GuestsAssigned, int BaseGuests, decimal ExtraPersonPrice)>
+        ?? new Dictionary<int, (int, int, decimal)>();
+    var culture = CultureInfo.GetCultureInfo("es-CO");
+    var nights = ViewBag.Nights is int nightsValue ? nightsValue : Math.Max(1, (Model.CheckOut.Date - Model.CheckIn.Date).Days);
+    var totalPrice = ViewBag.TotalPrice is decimal totalValue ? totalValue : rooms.Sum(item => item.BasePrice * nights);
+    var pricePerNight = ViewBag.PricePerNight is decimal nightlyValue ? nightlyValue : (nights > 0 ? totalPrice / nights : 0);
+    var siteNames = rooms.Select(item => item.SiteName).Where(name => !string.IsNullOrWhiteSpace(name)).Distinct().ToList();
+    var summarySiteName = siteNames.Count == 1 ? siteNames[0] : "Varias sedes";
+    var roomLabel = rooms.Count == 1 ? $"Habitación {rooms[0].RoomNumber} · {rooms[0].TypeName}" : $"{rooms.Count} habitaciones seleccionadas";
+}
+
+<div class="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8 py-10">
+    <div class="admin-page-header">
+        <div>
+            <h1 class="admin-page-header__title flex items-center gap-3">
+                <a href="javascript:void(0)" onclick="if(document.referrer){history.back();}else{window.location='/';}" class="admin-form-back">
+                    <svg viewBox="0 0 20 20" fill="currentColor" class="size-4"><path fill-rule="evenodd" d="M17 10a.75.75 0 0 1-.75.75H5.612l4.158 3.96a.75.75 0 1 1-1.04 1.08l-5.5-5.25a.75.75 0 0 1 0-1.08l5.5-5.25a.75.75 0 1 1 1.04 1.08L5.612 9.25H16.25A.75.75 0 0 1 17 10Z" clip-rule="evenodd"/></svg>
+                    Volver
+                </a>
+                <span class="text-muted-foreground/40">/</span>
+                Confirmar reserva
+            </h1>
+            <p class="admin-page-header__subtitle">@summarySiteName · @roomLabel · @nights noche@(nights != 1 ? "s" : "")</p>
+        </div>
+    </div>
+
+    <div class="reservation-page-layout mt-8">
+        <main class="reservation-page-main">
+            <form asp-action="Create" method="post" id="reservationForm" class="reservation-panel">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="reservation-validation"></div>
+                <input type="hidden" name="CheckIn" value="@Model.CheckIn.ToString("yyyy-MM-dd")" />
+                <input type="hidden" name="CheckOut" value="@Model.CheckOut.ToString("yyyy-MM-dd")" />
+                <input type="hidden" name="TotalGuests" value="@Model.TotalGuests" />
+                @foreach (var id in Model.RoomIds)
+                {
+                    <input type="hidden" name="RoomIds" value="@id" />
+                }
+
+                <div class="reservation-section-heading">
+                    <p>Datos del huésped</p>
+                    <p>@Model.TotalGuests huésped@(Model.TotalGuests != 1 ? "es" : "")</p>
+                </div>
+
+                <div class="reservation-form-grid">
+                    <div class="reservation-field-wide">
+                        <label asp-for="GuestName" class="reservation-field-label">Nombre completo</label>
+                        <input asp-for="GuestName" required autocomplete="name" class="compute-input" />
+                        <span asp-validation-for="GuestName" class="reservation-validation-message"></span>
+                    </div>
+                    <div>
+                        <label asp-for="GuestEmail" class="reservation-field-label">Correo electrónico</label>
+                        <input asp-for="GuestEmail" type="email" required autocomplete="email" class="compute-input" />
+                        <span asp-validation-for="GuestEmail" class="reservation-validation-message"></span>
+                    </div>
+                    <div>
+                        <label asp-for="GuestPhone" class="reservation-field-label">Teléfono <span class="font-normal">(opcional)</span></label>
+                        <input asp-for="GuestPhone" type="tel" autocomplete="tel" class="compute-input" />
+                        <span asp-validation-for="GuestPhone" class="reservation-validation-message"></span>
+                    </div>
+                    <div class="reservation-field-wide">
+                        <label asp-for="Notes" class="reservation-field-label">Notas <span class="font-normal">(opcional)</span></label>
+                        <textarea asp-for="Notes" rows="4" class="compute-input min-h-28 resize-none"></textarea>
+                    </div>
+                </div>
+            </form>
+
+            <section class="reservation-panel">
+                <div class="reservation-section-heading">
+                    <p>Selección</p>
+                    <p>@roomLabel</p>
+                </div>
+                @if (rooms.Any())
+                {
+                    <div class="reservation-room-stack">
+                        @{
+                            var remainingGuestsForSummary = Math.Max(1, Model.TotalGuests);
+                        }
+                        @foreach (var selectedRoom in rooms)
+                        {
+                            var roomTotal = roomTotals.TryGetValue(selectedRoom.Id, out var value) ? value : selectedRoom.BasePrice * nights;
+                            var hasExtras = roomExtras.TryGetValue(selectedRoom.Id, out var extras);
+                            var guestsForRoom = hasExtras ? extras.GuestsAssigned : Math.Min(remainingGuestsForSummary, selectedRoom.MaxGuests);
+                            if (guestsForRoom < 1) { guestsForRoom = 1; }
+                            remainingGuestsForSummary = Math.Max(0, remainingGuestsForSummary - guestsForRoom);
+                            var baseGuests = hasExtras ? extras.BaseGuests : 1;
+                            var extraPersonPrice = hasExtras ? extras.ExtraPersonPrice : 0m;
+                            var extrasInRoom = Math.Max(0, guestsForRoom - baseGuests);
+                            var hasExtraRule = extraPersonPrice > 0 && selectedRoom.MaxGuests > baseGuests;
+                            <div class="reservation-room-row">
+                                <div class="min-w-0">
+                                    <p class="reservation-room-name">Habitación @selectedRoom.RoomNumber</p>
+                                    <p class="reservation-room-meta truncate">@selectedRoom.AccommodationName · @selectedRoom.TypeName</p>
+                                    <p class="reservation-room-meta mt-1">@guestsForRoom huésped@(guestsForRoom != 1 ? "es" : "") · cap. @selectedRoom.MaxGuests</p>
+                                    @if (hasExtraRule)
+                                    {
+                                        <p class="reservation-room-meta mt-1 text-xs">Tarifa base incluye @baseGuests personas · cada persona adicional $@extraPersonPrice.ToString("N0", culture)/noche</p>
+                                        @if (extrasInRoom > 0)
+                                        {
+                                            <p class="reservation-room-meta mt-0.5 text-xs">+ @extrasInRoom persona@(extrasInRoom != 1 ? "s" : "") adicional@(extrasInRoom != 1 ? "es" : "") × $@extraPersonPrice.ToString("N0", culture) × @nights noche@(nights != 1 ? "s" : "")</p>
+                                        }
+                                    }
+                                </div>
+                                <p class="reservation-room-price">$@roomTotal.ToString("N0", culture)</p>
+                            </div>
+                        }
+                    </div>
+                }
+            </section>
+        </main>
+
+        <aside class="reservation-summary reservation-summary--sticky">
+            <p class="reservation-summary-title">Resumen</p>
+
+            <div class="mt-4">
+                <p class="reservation-summary-site">@summarySiteName</p>
+                <p class="mt-1.5 text-sm text-muted-foreground">@roomLabel</p>
+            </div>
+
+            <div class="reservation-date-chip mt-4">
+                <p>@Model.CheckIn.ToString("dd MMM", culture) - @Model.CheckOut.ToString("dd MMM yyyy", culture)</p>
+                <p class="text-muted-foreground">@nights noche@(nights != 1 ? "s" : "") · @Model.TotalGuests huésped@(Model.TotalGuests != 1 ? "es" : "")</p>
+            </div>
+
+            <div class="reservation-summary-rows">
+                <div class="reservation-summary-row">
+                    <span class="reservation-row-label">Precio/noche</span>
+                    <span class="reservation-row-value">$@pricePerNight.ToString("N0", culture)</span>
+                </div>
+                <div class="reservation-summary-row">
+                    <span class="reservation-row-label">Noches</span>
+                    <span class="reservation-row-value">× @nights</span>
+                </div>
+            </div>
+
+            <div class="reservation-summary-total">
+                <span class="reservation-row-label">Total</span>
+                <span class="reservation-total">$@totalPrice.ToString("N0", culture)</span>
+            </div>
+
+            <button type="submit" form="reservationForm" class="compute-button reservation-primary-action mt-5 w-full">Confirmar reserva</button>
+        </aside>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

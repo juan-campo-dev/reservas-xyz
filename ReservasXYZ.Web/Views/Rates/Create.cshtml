@@ -1,0 +1,58 @@
+@model ReservasXYZ.Application.DTOs.CreateRateDto
+@{
+    ViewData["Title"] = "Crear Tarifa";
+}
+
+<div class="admin-form-shell">
+    <div>
+        <a asp-action="Index" class="admin-form-back">← Volver a tarifas</a>
+        <h2 class="admin-form-title">Nueva tarifa</h2>
+    </div>
+
+    <div class="admin-form-panel">
+        <div class="admin-form-section-heading">
+            <p>Datos de la tarifa</p>
+            <p>Campos obligatorios</p>
+        </div>
+        <form asp-action="Create" method="post">
+            <div asp-validation-summary="ModelOnly" class="admin-form-validation-summary"></div>
+            <div class="admin-form-grid">
+                <div class="admin-form-field admin-form-field--wide">
+                    <label asp-for="RoomId" class="admin-form-label">Habitación</label>
+                    <select asp-for="RoomId" asp-items="ViewBag.Rooms" class="admin-form-input" required>
+                        <option value="">Seleccionar...</option>
+                    </select>
+                    <span asp-validation-for="RoomId" class="admin-form-validation"></span>
+                </div>
+                <div class="admin-form-field">
+                    <label asp-for="SeasonId" class="admin-form-label">Temporada</label>
+                    <select asp-for="SeasonId" asp-items="ViewBag.Seasons" class="admin-form-input" required>
+                        <option value="">Seleccionar...</option>
+                    </select>
+                    <span asp-validation-for="SeasonId" class="admin-form-validation"></span>
+                </div>
+                <div class="admin-form-field">
+                    <label asp-for="PricePerNight" class="admin-form-label">Precio por noche</label>
+                    <input asp-for="PricePerNight" type="number" min="0" step="0.01" class="admin-form-input"
+                           required />
+                    <span asp-validation-for="PricePerNight" class="admin-form-validation"></span>
+                </div>
+            </div>
+            <div class="admin-form-actions">
+                <button type="submit" class="admin-form-submit">
+                    <svg viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd"
+                              d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z"
+                              clip-rule="evenodd" />
+                    </svg>
+                    Guardar
+                </button>
+                <a asp-action="Index" class="admin-form-cancel">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,300 @@
+@model ReservationDto
+@{
+    ViewData["Title"] = $"Reserva #{Model.Id}";
+    var culture = CultureInfo.GetCultureInfo("es-CO");
+    var isAdmin = User.IsInRole("Admin");
+    var details = Model.Details.ToList();
+    var firstDetail = details.FirstOrDefault();
+    var siteNames = details.Select(detail => detail.SiteName).Where(name => !string.IsNullOrWhiteSpace(name)).Distinct().ToList();
+    var siteName = siteNames.Count == 1 ? siteNames[0] : "Sede por confirmar";
+    var accommodationCount = details.Select(detail => detail.AccommodationName).Where(name => !string.IsNullOrWhiteSpace(name)).Distinct().Count();
+    var roomLabel = details.Count == 1 ? $"Habitación {firstDetail?.RoomNumber}" : $"{details.Count} habitaciones";
+    var nights = Math.Max(1, (Model.CheckOut.Date - Model.CheckIn.Date).Days);
+    var statusClass = Model.Status switch
+    {
+        ReservationStatus.Pending => "reservation-status-badge--pending",
+        ReservationStatus.Confirmed => "reservation-status-badge--confirmed",
+        ReservationStatus.CheckedIn => "reservation-status-badge--checked-in",
+        ReservationStatus.CheckedOut => "reservation-status-badge--checked-out",
+        ReservationStatus.Cancelled => "reservation-status-badge--cancelled",
+        _ => "reservation-status-badge--checked-out"
+    };
+}
+
+@if (isAdmin)
+{
+    <div>
+        <div class="admin-page-header">
+            <div>
+                <h1 class="admin-page-header__title flex items-center gap-3">
+                    <a asp-action="Index" class="admin-form-back">
+                        <svg viewBox="0 0 20 20" fill="currentColor" class="size-4"><path fill-rule="evenodd" d="M17 10a.75.75 0 0 1-.75.75H5.612l4.158 3.96a.75.75 0 1 1-1.04 1.08l-5.5-5.25a.75.75 0 0 1 0-1.08l5.5-5.25a.75.75 0 1 1 1.04 1.08L5.612 9.25H16.25A.75.75 0 0 1 17 10Z" clip-rule="evenodd"/></svg>
+                        Reservas
+                    </a>
+                    <span class="text-muted-foreground/40">/</span>
+                    Reserva #@Model.Id
+                </h1>
+                <p class="admin-page-header__subtitle">@siteName · @roomLabel · @nights noche@(nights != 1 ? "s" : "")</p>
+            </div>
+            <span class="reservation-status-badge @statusClass shrink-0">@Model.Status.ToSpanish()</span>
+        </div>
+
+        <div class="reservation-page-layout">
+            <main class="reservation-page-main">
+                <section class="compute-card rounded-3xl p-6">
+                    <div class="flex items-center justify-between gap-4 border-b border-foreground/5 pb-4">
+                        <p class="font-display text-lg text-foreground">Destino</p>
+                        <p class="text-sm text-muted-foreground">@accommodationCount alojamiento@(accommodationCount != 1 ? "s" : "")</p>
+                    </div>
+                    <div class="reservation-overview-grid">
+                        <div class="min-w-0">
+                            <p class="reservation-detail-title">@siteName</p>
+                            <p class="mt-2 text-sm text-muted-foreground">@roomLabel</p>
+                        </div>
+                        <div class="reservation-date-chip">
+                            <p>@Model.CheckIn.ToString("dd MMM", culture) - @Model.CheckOut.ToString("dd MMM yyyy", culture)</p>
+                            <p class="text-muted-foreground">@nights noche@(nights != 1 ? "s" : "") · @Model.TotalGuests huésped@(Model.TotalGuests != 1 ? "es" : "")</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="compute-card rounded-3xl p-6">
+                    <div class="flex items-center justify-between gap-4 border-b border-foreground/5 pb-4">
+                        <p class="font-display text-lg text-foreground">Huésped</p>
+                        <p class="text-sm text-muted-foreground">Datos de contacto</p>
+                    </div>
+                    <div class="reservation-detail-grid">
+                        <div class="reservation-detail-item">
+                            <p class="reservation-detail-label">Nombre</p>
+                            <p class="reservation-detail-value">@Model.GuestName</p>
+                        </div>
+                        <div class="reservation-detail-item">
+                            <p class="reservation-detail-label">Correo</p>
+                            <p class="reservation-detail-value break-all">@Model.GuestEmail</p>
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(Model.GuestPhone))
+                        {
+                            <div class="reservation-detail-item">
+                                <p class="reservation-detail-label">Teléfono</p>
+                                <p class="reservation-detail-value">@Model.GuestPhone</p>
+                            </div>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Model.Notes))
+                        {
+                            <div class="reservation-detail-item sm:col-span-2">
+                                <p class="reservation-detail-label">Notas</p>
+                                <p class="reservation-detail-value">@Model.Notes</p>
+                            </div>
+                        }
+                    </div>
+                </section>
+
+                @if (details.Any())
+                {
+                    <section class="compute-card rounded-3xl p-6">
+                        <div class="flex items-center justify-between gap-4 border-b border-foreground/5 pb-4">
+                            <p class="font-display text-lg text-foreground">Habitaciones</p>
+                            <p class="text-sm text-muted-foreground">@details.Count seleccionada@(details.Count != 1 ? "s" : "")</p>
+                        </div>
+                        <div class="reservation-room-stack">
+                            @foreach (var detail in details)
+                            {
+                                <div class="reservation-room-row">
+                                    <div class="min-w-0">
+                                        <p class="reservation-room-name">Habitación @detail.RoomNumber</p>
+                                        <p class="reservation-room-meta truncate">@detail.AccommodationName · @detail.Nights noche@(detail.Nights != 1 ? "s" : "")</p>
+                                    </div>
+                                    <div class="text-left sm:text-right">
+                                        <p class="reservation-room-price">$@detail.Subtotal.ToString("N0", culture)</p>
+                                        <p class="reservation-room-nightly">$@detail.PricePerNight.ToString("N0", culture)/noche</p>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </section>
+                }
+            </main>
+
+            <aside class="compute-card rounded-3xl p-6 reservation-summary--sticky">
+                <p class="font-display text-lg text-foreground">Comprobante</p>
+                <div class="reservation-summary-rows">
+                    <div class="reservation-summary-row">
+                        <span class="reservation-row-label">Estado</span>
+                        <span class="reservation-status-badge @statusClass">@Model.Status.ToSpanish()</span>
+                    </div>
+                    <div class="reservation-summary-row">
+                        <span class="reservation-row-label">Habitaciones</span>
+                        <span class="reservation-row-value">@details.Count</span>
+                    </div>
+                    <div class="reservation-summary-row">
+                        <span class="reservation-row-label">Noches</span>
+                        <span class="reservation-row-value">@nights</span>
+                    </div>
+                </div>
+
+                <div class="reservation-summary-total">
+                    <span class="reservation-row-label">Total</span>
+                    <span class="reservation-total">$@Model.TotalAmount.ToString("N0", culture)</span>
+                </div>
+
+                <div class="reservation-actions-stack">
+                    @if (Model.Status == ReservationStatus.Pending)
+                    {
+                        <form asp-action="Confirm" asp-route-id="@Model.Id" method="post">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="compute-button reservation-primary-action w-full">Confirmar</button>
+                        </form>
+                    }
+                    @if (Model.Status == ReservationStatus.Confirmed)
+                    {
+                        <form asp-action="CheckIn" asp-route-id="@Model.Id" method="post">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="compute-button reservation-primary-action w-full">Check-in</button>
+                        </form>
+                    }
+                    @if (Model.Status == ReservationStatus.CheckedIn)
+                    {
+                        <form asp-action="CheckOut" asp-route-id="@Model.Id" method="post">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="compute-button reservation-primary-action w-full">Check-out</button>
+                        </form>
+                    }
+                    @if (Model.Status != ReservationStatus.Cancelled && Model.Status != ReservationStatus.CheckedOut)
+                    {
+                        <form asp-action="Cancel" asp-route-id="@Model.Id" method="post">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="compute-button-outline reservation-primary-action w-full">Cancelar</button>
+                        </form>
+                    }
+                </div>
+            </aside>
+        </div>
+    </div>
+}
+else
+{
+    <div class="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8 py-10">
+        <div class="admin-page-header">
+            <div>
+                <h1 class="admin-page-header__title flex items-center gap-3">
+                    <a asp-action="Index" class="admin-form-back">
+                        <svg viewBox="0 0 20 20" fill="currentColor" class="size-4"><path fill-rule="evenodd" d="M17 10a.75.75 0 0 1-.75.75H5.612l4.158 3.96a.75.75 0 1 1-1.04 1.08l-5.5-5.25a.75.75 0 0 1 0-1.08l5.5-5.25a.75.75 0 1 1 1.04 1.08L5.612 9.25H16.25A.75.75 0 0 1 17 10Z" clip-rule="evenodd"/></svg>
+                        Mis reservas
+                    </a>
+                    <span class="text-muted-foreground/40">/</span>
+                    Reserva #@Model.Id
+                </h1>
+                <p class="admin-page-header__subtitle">@siteName · @roomLabel · @nights noche@(nights != 1 ? "s" : "")</p>
+            </div>
+            <span class="reservation-status-badge @statusClass shrink-0">@Model.Status.ToSpanish()</span>
+        </div>
+
+        <div class="reservation-page-layout mt-8">
+            <main class="reservation-page-main">
+                <section class="compute-card rounded-3xl p-6">
+                    <div class="flex items-center justify-between gap-4 border-b border-foreground/5 pb-4">
+                        <p class="font-display text-lg text-foreground">Destino</p>
+                        <p class="text-sm text-muted-foreground">@accommodationCount alojamiento@(accommodationCount != 1 ? "s" : "")</p>
+                    </div>
+                    <div class="reservation-overview-grid">
+                        <div class="min-w-0">
+                            <p class="reservation-detail-title">@siteName</p>
+                            <p class="mt-2 text-sm text-muted-foreground">@roomLabel</p>
+                        </div>
+                        <div class="reservation-date-chip">
+                            <p>@Model.CheckIn.ToString("dd MMM", culture) - @Model.CheckOut.ToString("dd MMM yyyy", culture)</p>
+                            <p class="text-muted-foreground">@nights noche@(nights != 1 ? "s" : "") · @Model.TotalGuests huésped@(Model.TotalGuests != 1 ? "es" : "")</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="compute-card rounded-3xl p-6">
+                    <div class="flex items-center justify-between gap-4 border-b border-foreground/5 pb-4">
+                        <p class="font-display text-lg text-foreground">Huésped</p>
+                        <p class="text-sm text-muted-foreground">Datos de contacto</p>
+                    </div>
+                    <div class="reservation-detail-grid">
+                        <div class="reservation-detail-item">
+                            <p class="reservation-detail-label">Nombre</p>
+                            <p class="reservation-detail-value">@Model.GuestName</p>
+                        </div>
+                        <div class="reservation-detail-item">
+                            <p class="reservation-detail-label">Correo</p>
+                            <p class="reservation-detail-value break-all">@Model.GuestEmail</p>
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(Model.GuestPhone))
+                        {
+                            <div class="reservation-detail-item">
+                                <p class="reservation-detail-label">Teléfono</p>
+                                <p class="reservation-detail-value">@Model.GuestPhone</p>
+                            </div>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Model.Notes))
+                        {
+                            <div class="reservation-detail-item sm:col-span-2">
+                                <p class="reservation-detail-label">Notas</p>
+                                <p class="reservation-detail-value">@Model.Notes</p>
+                            </div>
+                        }
+                    </div>
+                </section>
+
+                @if (details.Any())
+                {
+                    <section class="compute-card rounded-3xl p-6">
+                        <div class="flex items-center justify-between gap-4 border-b border-foreground/5 pb-4">
+                            <p class="font-display text-lg text-foreground">Habitaciones</p>
+                            <p class="text-sm text-muted-foreground">@details.Count seleccionada@(details.Count != 1 ? "s" : "")</p>
+                        </div>
+                        <div class="reservation-room-stack">
+                            @foreach (var detail in details)
+                            {
+                                <div class="reservation-room-row">
+                                    <div class="min-w-0">
+                                        <p class="reservation-room-name">Habitación @detail.RoomNumber</p>
+                                        <p class="reservation-room-meta truncate">@detail.AccommodationName · @detail.Nights noche@(detail.Nights != 1 ? "s" : "")</p>
+                                    </div>
+                                    <div class="text-left sm:text-right">
+                                        <p class="reservation-room-price">$@detail.Subtotal.ToString("N0", culture)</p>
+                                        <p class="reservation-room-nightly">$@detail.PricePerNight.ToString("N0", culture)/noche</p>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </section>
+                }
+            </main>
+
+            <aside class="compute-card rounded-3xl p-6 reservation-summary--sticky">
+                <p class="font-display text-lg text-foreground">Comprobante</p>
+                <div class="reservation-summary-rows">
+                    <div class="reservation-summary-row">
+                        <span class="reservation-row-label">Estado</span>
+                        <span class="reservation-status-badge @statusClass">@Model.Status.ToSpanish()</span>
+                    </div>
+                    <div class="reservation-summary-row">
+                        <span class="reservation-row-label">Habitaciones</span>
+                        <span class="reservation-row-value">@details.Count</span>
+                    </div>
+                    <div class="reservation-summary-row">
+                        <span class="reservation-row-label">Noches</span>
+                        <span class="reservation-row-value">@nights</span>
+                    </div>
+                </div>
+
+                <div class="reservation-summary-total">
+                    <span class="reservation-row-label">Total</span>
+                    <span class="reservation-total">$@Model.TotalAmount.ToString("N0", culture)</span>
+                </div>
+
+                @if (Model.Status == ReservationStatus.Pending)
+                {
+                    <form asp-action="Cancel" asp-route-id="@Model.Id" method="post" class="mt-5">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="compute-button-outline reservation-primary-action w-full">Cancelar reserva</button>
+                    </form>
+                }
+            </aside>
+        </div>
+    </div>
+}

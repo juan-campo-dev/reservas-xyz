@@ -1,0 +1,106 @@
+@model dynamic
+@{
+    var isEdit = Model is ReservasXYZ.Application.DTOs.UpdateRateDto;
+    var action = isEdit ? "Edit" : "Create";
+    var title = isEdit ? "Editar tarifa" : "Nueva tarifa";
+    var rooms = ViewBag.Rooms as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>;
+    var seasons = ViewBag.Seasons as Microsoft.AspNetCore.Mvc.Rendering.SelectList;
+}
+
+<div class="admin-modal-header">
+    <button type="button" class="admin-modal-close" onclick="window.__adminModal.close()" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+    <h3 class="admin-modal-title">@title</h3>
+    <p class="admin-modal-subtitle">@(isEdit ? "Modifica la tarifa" : "Asigna un precio por noche a una habitación y temporada")</p>
+</div>
+<form id="rateModalForm" asp-action="@action" method="post">
+    @Html.AntiForgeryToken()
+    @if (isEdit)
+    {
+        <input type="hidden" name="Id" value="@Model.Id" />
+    }
+    <div class="admin-modal-body">
+        <div class="admin-modal-grid">
+            <div class="admin-modal-field admin-modal-field--full">
+                <label class="admin-modal-label">Habitación</label>
+                <select class="admin-modal-input" name="RoomId" required>
+                    <option value="">Seleccionar habitación...</option>
+                    @if (rooms != null)
+                    {
+                        @foreach (var r in rooms)
+                        {
+                            if (r.Selected)
+                            {
+                                <option value="@r.Value" selected="selected">@r.Text</option>
+                            }
+                            else
+                            {
+                                <option value="@r.Value">@r.Text</option>
+                            }
+                        }
+                    }
+                </select>
+            </div>
+            <div class="admin-modal-field">
+                <label class="admin-modal-label">Temporada</label>
+                <select class="admin-modal-input" name="SeasonId" required>
+                    <option value="">Seleccionar...</option>
+                    @if (seasons != null)
+                    {
+                        @foreach (var s in seasons)
+                        {
+                            if (s.Selected)
+                            {
+                                <option value="@s.Value" selected="selected">@s.Text</option>
+                            }
+                            else
+                            {
+                                <option value="@s.Value">@s.Text</option>
+                            }
+                        }
+                    }
+                </select>
+            </div>
+            <div class="admin-modal-field">
+                <label class="admin-modal-label">Precio por noche</label>
+                <input class="admin-modal-input" name="PricePerNight" type="number" step="0.01" min="0"
+                       value="@Model.PricePerNight" required />
+            </div>
+            <div class="admin-modal-field">
+                <label class="admin-modal-label">Personas base incluidas</label>
+                <input class="admin-modal-input" name="BaseGuests" type="number" step="1" min="1"
+                       value="@(isEdit ? (int)Model.BaseGuests : 1)" required />
+            </div>
+            <div class="admin-modal-field">
+                <label class="admin-modal-label">Precio persona adicional</label>
+                <input class="admin-modal-input" name="ExtraPersonPrice" type="number" step="0.01" min="0"
+                       value="@(isEdit ? Model.ExtraPersonPrice : 0)" required />
+            </div>
+            <div class="admin-modal-field">
+                <label class="admin-modal-label">Tipo de tarifa</label>
+                <select class="admin-modal-input" name="Kind" required>
+                    @{
+                        var currentKind = isEdit ? (int)Model.Kind : 0;
+                    }
+                    <option value="0" selected="@(currentKind == 0)">Standard</option>
+                    <option value="1" selected="@(currentKind == 1)">Especial Lun-Jue</option>
+                </select>
+            </div>
+            @if (isEdit)
+            {
+                <div class="admin-modal-field">
+                    <label class="admin-modal-label admin-modal-label--checkbox">
+                        <input type="checkbox" name="IsActive" value="true" @(Model.IsActive ? "checked" : "") />
+                        Activa
+                    </label>
+                </div>
+            }
+        </div>
+    </div>
+    <div class="admin-modal-footer">
+        <button type="button" class="admin-modal-btn admin-modal-btn--cancel"
+                onclick="window.__adminModal.close()">Cancelar</button>
+        <button type="submit" class="admin-modal-btn admin-modal-btn--primary">@(isEdit ? "Guardar cambios" : "Crear tarifa")</button>
+    </div>
+</form>

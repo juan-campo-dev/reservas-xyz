@@ -1,0 +1,61 @@
+@model ReservasXYZ.Application.DTOs.CreateSiteDto
+@{
+    ViewData["Title"] = "Crear Sitio";
+}
+
+<div class="admin-form-shell">
+    <div>
+        <a asp-action="Index" class="admin-form-back">← Volver a sitios</a>
+        <h2 class="admin-form-title">Nuevo sitio</h2>
+    </div>
+
+    <div class="admin-form-panel">
+        <div class="admin-form-section-heading">
+            <p>Información del sitio</p>
+            <p>Campos obligatorios</p>
+        </div>
+        <form asp-action="Create" method="post">
+            <div class="admin-form-grid">
+                <div class="admin-form-field admin-form-field--wide">
+                    <label asp-for="Name" class="admin-form-label">Nombre</label>
+                    <input asp-for="Name" class="admin-form-input" required />
+                </div>
+                <div class="admin-form-field admin-form-field--wide">
+                    <label asp-for="Address" class="admin-form-label">Dirección</label>
+                    <input asp-for="Address" class="admin-form-input" required />
+                </div>
+                <div class="admin-form-field">
+                    <label asp-for="City" class="admin-form-label">Ciudad</label>
+                    <input asp-for="City" class="admin-form-input" required />
+                </div>
+                <div class="admin-form-field">
+                    <label asp-for="Country" class="admin-form-label">País</label>
+                    <input asp-for="Country" class="admin-form-input" required />
+                </div>
+                <div class="admin-form-field">
+                    <label asp-for="Phone" class="admin-form-label">Teléfono</label>
+                    <input asp-for="Phone" class="admin-form-input" />
+                </div>
+                <div class="admin-form-field">
+                    <label asp-for="Email" class="admin-form-label">Email</label>
+                    <input asp-for="Email" type="email" class="admin-form-input" />
+                </div>
+                <div class="admin-form-field admin-form-field--wide">
+                    <label asp-for="Description" class="admin-form-label">Descripción</label>
+                    <textarea asp-for="Description" rows="3" class="admin-form-input"></textarea>
+                </div>
+            </div>
+            <div class="admin-form-actions">
+                <button type="submit" class="admin-form-submit">
+                    <svg viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd"
+                              d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z"
+                              clip-rule="evenodd" />
+                    </svg>
+                    Guardar
+                </button>
+                <a asp-action="Index" class="admin-form-cancel">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>

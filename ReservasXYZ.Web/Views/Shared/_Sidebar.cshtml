@@ -1,0 +1,70 @@
+@{
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var isDashboard = string.Equals(currentController, "Home", StringComparison.OrdinalIgnoreCase);
+    var isReservations = string.Equals(currentController, "Reservations", StringComparison.OrdinalIgnoreCase);
+    var isSites = string.Equals(currentController, "Sites", StringComparison.OrdinalIgnoreCase);
+    var isAccommodations = string.Equals(currentController, "Accommodations", StringComparison.OrdinalIgnoreCase);
+    var isRooms = string.Equals(currentController, "Rooms", StringComparison.OrdinalIgnoreCase);
+    var isSeasons = string.Equals(currentController, "Seasons", StringComparison.OrdinalIgnoreCase);
+    var isRates = string.Equals(currentController, "Rates", StringComparison.OrdinalIgnoreCase);
+}
+
+<aside class="admin-sidebar">
+    <div class="admin-sidebar__brand">
+        <a asp-controller="Home" asp-action="Index" class="admin-brand">
+            <span class="admin-brand__main">RESERVAS</span>
+            <span class="admin-brand__mark">XYZ</span>
+        </a>
+    </div>
+
+    <nav class="admin-sidebar__nav" aria-label="Administracion">
+        <div class="admin-sidebar__group">
+            <p class="admin-sidebar__group-label">Operacion</p>
+            <a asp-controller="Home" asp-action="Index" class="admin-nav-item @(isDashboard ? "is-active" : "")">
+                <span>Dashboard</span>
+                <span class="admin-nav-item__index">01</span>
+            </a>
+            <a asp-controller="Reservations" asp-action="Index"
+               class="admin-nav-item @(isReservations ? "is-active" : "")">
+                <span>Reservas</span>
+                <span class="admin-nav-item__index">02</span>
+            </a>
+        </div>
+
+        @if (User.IsInRole("Admin"))
+        {
+            <div class="admin-sidebar__group">
+                <p class="admin-sidebar__group-label">Administracion</p>
+                <a asp-controller="Sites" asp-action="Index" class="admin-nav-item @(isSites ? "is-active" :"")">
+                    <span>Sitios</span>
+                    <span class="admin-nav-item__index">04</span>
+                </a>
+                <a asp-controller="Accommodations" asp-action="Index"
+                 class="admin-nav-item @(isAccommodations ? "is-active" :"")">
+                    <span>Alojamientos</span>
+                    <span class="admin-nav-item__index">05</span>
+                </a>
+                <a asp-controller="Rooms" asp-action="Index" class="admin-nav-item @(isRooms ? "is-active" :"")">
+                    <span>Habitaciones</span>
+                    <span class="admin-nav-item__index">06</span>
+                </a>
+                <a asp-controller="Seasons" asp-action="Index" class="admin-nav-item @(isSeasons ? "is-active" :"")">
+                    <span>Temporadas</span>
+                    <span class="admin-nav-item__index">07</span>
+                </a>
+                <a asp-controller="Rates" asp-action="Index" class="admin-nav-item @(isRates ? "is-active" :"")">
+                    <span>Tarifas</span>
+                    <span class="admin-nav-item__index">08</span>
+                </a>
+            </div>
+       
+        }
+    </nav>
+
+    <div class="admin-sidebar__session">
+        <div class="admin-session-card">
+            <p>Sesión activa</p>
+            <span> @User.Identity?.Name</span>
+        </div>
+    </div>
+</aside>

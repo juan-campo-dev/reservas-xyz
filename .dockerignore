@@ -1,0 +1,9 @@
+**/bin/
+**/obj/
+**/node_modules/
+**/.git/
+**/.vs/
+**/wwwroot/css/output.css
+*.user
+*.suo
+.env

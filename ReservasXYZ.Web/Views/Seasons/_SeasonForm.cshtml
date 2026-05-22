@@ -1,0 +1,63 @@
+@model dynamic
+@{
+    var isEdit = Model is ReservasXYZ.Application.DTOs.UpdateSeasonDto;
+    var action = isEdit ? "Edit" : "Create";
+    var title = isEdit ? "Editar temporada" : "Nueva temporada";
+    var startVal = isEdit ? ((DateTime)Model.StartDate).ToString("yyyy-MM-dd") : DateTime.Today.ToString("yyyy-MM-dd");
+    var endVal = isEdit ? ((DateTime)Model.EndDate).ToString("yyyy-MM-dd") :
+DateTime.Today.AddMonths(3).ToString("yyyy-MM-dd");
+}
+
+<div class="admin-modal-header">
+    <button type="button" class="admin-modal-close" onclick="window.__adminModal.close()" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6L6 18" />
+        </svg>
+    </button>
+    <h3 class="admin-modal-title">@title</h3>
+    <p class="admin-modal-subtitle">@(isEdit ? "Modifica los datos de la temporada" : "Define una nueva temporada con multiplicador de precio")</p>
+</div>
+<form id="seasonModalForm" asp-action="@action" method="post">
+    @Html.AntiForgeryToken()
+    @if (isEdit)
+    {
+        <input type="hidden" name="Id" value = "@Model.Id" />
+ 
+        }
+            <div class="admin-modal-body">
+                <div class="admin-modal-grid">
+                    <div class="admin-modal-field admin-modal-field--full">
+                        <label class="admin-modal-label">Nombre</label>
+                        <input class="admin-modal-input" name="Name" value = "@Model.Name" required />
+                    </div>
+                    <div class="admin-modal-field">
+                        <label class="admin-modal-label">Fecha inicio</label>
+                        <input class="admin-modal-input" name="StartDate" type="date" value = "@startVal" required />
+                    </div>
+                    <div class="admin-modal-field">
+                        <label class="admin-modal-label">Fecha fin</label>
+                        <input class="admin-modal-input" name="EndDate" type="date" value = "@endVal" required />
+                    </div>
+                    <div class="admin-modal-field">
+                        <label class="admin-modal-label">Multiplicador</label>
+                        <input class="admin-modal-input" name="PriceMultiplier" type="number" step="0.01" min="0.01"
+                           value = "@Model.PriceMultiplier" required />
+                    </div>
+                    @if(isEdit)
+                {
+                   <div class="admin-modal-field">
+                        <label class="admin-modal-label admin-modal-label--checkbox">
+                            <input type="checkbox" name="IsActive" value="true" @(Model.IsActive ? "checked" : "") />
+                            Activa
+                        </label>
+                    </div>
+       
+                }
+            </div>
+        </div>
+       <div class="admin-modal-footer">
+        <button type="button" class="admin-modal-btn admin-modal-btn--cancel"
+          onclick="window.__adminModal.close()">Cancelar</button>
+        <button type="submit" class="admin-modal-btn admin-modal-btn--primary">@(isEdit ? "Guardar cambios" : "Crear temporada")</button>
+    </div>
+</form>

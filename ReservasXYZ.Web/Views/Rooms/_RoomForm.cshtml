@@ -1,0 +1,102 @@
+@model dynamic
+@using ReservasXYZ.Domain.Enums
+@{
+    var isEdit = Model is ReservasXYZ.Application.DTOs.UpdateRoomDto;
+    var action = isEdit ? "Edit" : "Create";
+    var title = isEdit ? "Editar habitación" : "Nueva habitación";
+    var accommodations = ViewBag.Accommodations as Microsoft.AspNetCore.Mvc.Rendering.SelectList;
+    var currentType = isEdit ? (int)Model.Type : 0;
+}
+
+<div class="admin-modal-header">
+    <button type="button" class="admin-modal-close" onclick="window.__adminModal.close()" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+    <h3 class="admin-modal-title">@title</h3>
+    <p class="admin-modal-subtitle">@(isEdit ? "Modifica los datos de la habitación" : "Registra una nueva habitación")
+    </p>
+</div>
+<form id="roomModalForm" asp-action="@action" method="post">
+    @Html.AntiForgeryToken()
+    @if (isEdit)
+    {
+        <input type="hidden" name="Id" value="@Model.Id" />
+    }
+    <div class="admin-modal-body">
+        <div class="admin-modal-grid">
+            <div class="admin-modal-field">
+                <label class="admin-modal-label">Alojamiento</label>
+                <select class="admin-modal-input" name="AccommodationId" required>
+                    <option value="">Seleccionar...</option>
+                    @if (accommodations != null)
+                    {
+                        @foreach (var a in accommodations)
+                        {
+                            if (a.Selected)
+                            {
+                                <option value="@a.Value" selected="selected">@a.Text</option>
+                            }
+                            else
+                            {
+                                <option value="@a.Value">@a.Text</option>
+                            }
+                        }
+                    }
+                </select>
+            </div>
+            <div class="admin-modal-field">
+                <label class="admin-modal-label">Nro. habitación</label>
+                <input class="admin-modal-input" name="RoomNumber" value="@Model.RoomNumber" required />
+            </div>
+            <div class="admin-modal-field">
+                <label class="admin-modal-label">Tipo</label>
+                <select class="admin-modal-input" name="Type" required>
+                    @foreach (RoomType rt in Enum.GetValues(typeof(RoomType)))
+                    {
+                        if (currentType == (int)rt)
+                        {
+                            <option value="@((int)rt)" selected="selected">@rt.ToString()</option>
+                        }
+                        else
+                        {
+                            <option value="@((int)rt)">@rt.ToString()</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="admin-modal-field">
+                <label class="admin-modal-label">Máx. huéspedes</label>
+                <input class="admin-modal-input" name="MaxGuests" type="number" min="1" value="@Model.MaxGuests"
+                       required />
+            </div>
+            <div class="admin-modal-field">
+                <label class="admin-modal-label">Precio base</label>
+                <input class="admin-modal-input" name="BasePrice" type="number" step="0.01" min="0"
+                       value="@Model.BasePrice" required />
+            </div>
+            <div class="admin-modal-field">
+                <label class="admin-modal-label">Amenidades</label>
+                <input class="admin-modal-input" name="Amenities" value="@Model.Amenities"
+                       placeholder="WiFi, TV, Minibar..." />
+            </div>
+            <div class="admin-modal-field admin-modal-field--full">
+                <label class="admin-modal-label">Descripción</label>
+                <textarea class="admin-modal-input" name="Description" rows="2">@Model.Description</textarea>
+            </div>
+            @if (isEdit)
+            {
+                <div class="admin-modal-field">
+                    <label class="admin-modal-label admin-modal-label--checkbox">
+                        <input type="checkbox" name="IsActive" value="true" @(Model.IsActive ? "checked" : "") />
+                        Activa
+                    </label>
+                </div>
+            }
+        </div>
+    </div>
+    <div class="admin-modal-footer">
+        <button type="button" class="admin-modal-btn admin-modal-btn--cancel"
+                onclick="window.__adminModal.close()">Cancelar</button>
+        <button type="submit" class="admin-modal-btn admin-modal-btn--primary">@(isEdit ? "Guardar cambios" : "Crear habitación")</button>
+    </div>
+</form>

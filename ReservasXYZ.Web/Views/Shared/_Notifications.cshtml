@@ -1,0 +1,54 @@
+@{
+    var notifications = new[]
+    {
+        new { Type = "success", Title = "Éxito", Message = TempData["Success"]?.ToString(), Role = "status" },
+        new { Type = "warning", Title = "Advertencia", Message = TempData["Warning"]?.ToString(), Role = "alert" },
+        new { Type = "error", Title = "Error", Message = TempData["Error"]?.ToString(), Role = "alert" },
+        new { Type = "info", Title = "Información", Message = TempData["Info"]?.ToString(), Role = "status" }
+    }
+    .Where(item => !string.IsNullOrWhiteSpace(item.Message))
+    .ToList();
+}
+
+@if (notifications.Any())
+{
+    <div class="notification-stack" data-notification-stack>
+        @foreach (var notification in notifications)
+        {
+            <div class="notification-toast notification-toast--@notification.Type is-visible"
+                 data-notification-toast
+                 role="@notification.Role"
+                 aria-live="polite">
+                <div class="notification-toast__icon" aria-hidden="true">
+                    @switch (notification.Type)
+                    {
+                        case "success":
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                            break;
+                        case "warning":
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.72 3h16.92a2 2 0 0 0 1.72-3L13.71 3.86a2 2 0 0 0-3.42 0Z" />
+                            </svg>
+                            break;
+                        case "error":
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6 6 18" />
+                            </svg>
+                            break;
+                        default:
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 16v-4m0-4h.01M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0Z" />
+                            </svg>
+                            break;
+                    }
+                </div>
+                <div class="notification-toast__content">
+                    <p class="notification-toast__title">@notification.Title</p>
+                    <p class="notification-toast__message">@notification.Message</p>
+                </div>
+            </div>
+        }
+    </div>
+}

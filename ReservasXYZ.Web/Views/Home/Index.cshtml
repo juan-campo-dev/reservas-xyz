@@ -1,0 +1,797 @@
+@using ReservasXYZ.Domain.Enums
+@{
+    ViewData["Title"] = User.IsInRole("Admin") ? "Dashboard"
+        : User.Identity?.IsAuthenticated == true ? "Mi portal"
+        : "Fondo XYZ";
+}
+
+@if (User.Identity?.IsAuthenticated == true && User.IsInRole("Admin"))
+{
+    var adminModel = (DashboardDto)Model;
+    var culture = CultureInfo.GetCultureInfo("es-CO");
+    var availableRooms = Math.Max(adminModel.TotalRooms - adminModel.OccupiedRoomsToday, 0);
+    var occupancyRate = Math.Clamp(adminModel.OccupancyRate, 0, 100);
+    var occupancyWidth = FormattableString.Invariant($"{occupancyRate:0.##}%");
+    var averageBookingValue = adminModel.TotalReservations > 0
+        ? adminModel.TotalRevenue / adminModel.TotalReservations
+        : 0;
+    var confirmedRate = adminModel.TotalReservations > 0
+        ? (double)adminModel.ConfirmedReservations / adminModel.TotalReservations * 100
+        : 0;
+    var confirmedWidth = FormattableString.Invariant($"{Math.Clamp(confirmedRate, 0, 100):0.##}%");
+    var roomCellsCount = Math.Clamp(adminModel.TotalRooms, 6, 12);
+    var occupiedCells = adminModel.TotalRooms > 0
+        ? Math.Clamp((int)Math.Round(roomCellsCount * occupancyRate / 100), 0, roomCellsCount)
+        : 0;
+    var pendingCells = Math.Clamp(adminModel.PendingReservations, 0, roomCellsCount - occupiedCells);
+    var chartValues = adminModel.RecentReservations
+        .OrderBy(reservation => reservation.CreatedAt)
+        .Select(reservation => reservation.TotalAmount)
+        .ToList();
+    var hasChartData = chartValues.Any();
+
+    if (!hasChartData)
+    {
+        chartValues = new List<decimal> { 0m, 0m, 0m, 0m, 0m };
+    }
+
+    while (chartValues.Count < 5)
+    {
+        chartValues.Insert(0, 0m);
+    }
+
+    var bookingValues = hasChartData
+        ? chartValues.Select((_, index) => (decimal)(index + 1)).ToList()
+        : new List<decimal> { 0m, 0m, 0m, 0m, 0m };
+    var chartWidth = 420m;
+    var chartHeight = 180m;
+    var chartPadding = 22m;
+    var chartUsableWidth = chartWidth - chartPadding * 2;
+    var chartUsableHeight = chartHeight - chartPadding * 2;
+    Func<List<decimal>, string> buildChartPoints = values =>
+    {
+        var maxValue = Math.Max(1m, values.Max());
+        var step = values.Count > 1 ? chartUsableWidth / (values.Count - 1) : 0m;
+
+        return string.Join(" ", values.Select((value, index) =>
+        {
+            var x = values.Count == 1 ? chartWidth / 2 : chartPadding + step * index;
+            var y = chartHeight - chartPadding - value / maxValue * chartUsableHeight;
+            return FormattableString.Invariant($"{x:0.##},{y:0.##}");
+        }));
+    };
+    var revenuePoints = buildChartPoints(chartValues);
+    var bookingPoints = buildChartPoints(bookingValues);
+
+    <div class="admin-dashboard">
+        <div class="admin-page-header">
+            <div>
+                <h1 class="admin-page-header__title">Panel de control</h1>
+                <p class="admin-page-header__subtitle">Operacion en vivo</p>
+            </div>
+            <div class="admin-page-header__metrics">
+                <div class="admin-page-header__metric">
+                    <span>Ingresos del mes</span>
+                    <strong>@adminModel.MonthlyRevenue.ToString("C0", culture)</strong>
+                </div>
+                <div class="admin-page-header__separator" aria-hidden="true"></div>
+                <div class="admin-page-header__metric">
+                    <span>Acumulado total</span>
+                    <strong>@adminModel.TotalRevenue.ToString("C0", culture)</strong>
+                </div>
+            </div>
+        </div>
+
+        <section class="admin-module-stats admin-module-stats--dashboard" aria-label="Indicadores principales">
+            <div class="admin-module-stat admin-module-stat--blue">
+                <div class="admin-module-stat__header">
+                    <span class="admin-module-stat__label">Valor promedio reserva</span>
+                    <div class="admin-module-stat__indicator">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="admin-module-stat__icon" aria-hidden="true"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"></path></svg>
+                        <span class="admin-module-stat__pct">@adminModel.TotalReservations res.</span>
+                    </div>
+                </div>
+                <strong class="admin-module-stat__value">@averageBookingValue.ToString("C0", culture)</strong>
+                <div class="admin-module-stat__bar"><div class="admin-module-stat__bar-fill" style="width:100%"></div></div>
+            </div>
+            <div class="admin-module-stat admin-module-stat--green">
+                <div class="admin-module-stat__header">
+                    <span class="admin-module-stat__label">Reservas confirmadas</span>
+                    <div class="admin-module-stat__indicator">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="admin-module-stat__icon" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="m9 12 2 2 4-4"></path></svg>
+                        <span class="admin-module-stat__pct">@confirmedWidth</span>
+                    </div>
+                </div>
+                <strong class="admin-module-stat__value">@adminModel.ConfirmedReservations</strong>
+                <div class="admin-module-stat__bar"><div class="admin-module-stat__bar-fill" style="width:@confirmedWidth"></div></div>
+            </div>
+            <div class="admin-module-stat admin-module-stat--orange">
+                <div class="admin-module-stat__header">
+                    <span class="admin-module-stat__label">Ocupacion actual</span>
+                    <div class="admin-module-stat__indicator">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="admin-module-stat__icon" aria-hidden="true"><path d="M3 7v11a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7"></path><path d="M21 7H3l2-4h14z"></path><path d="M12 11v4"></path></svg>
+                        <span class="admin-module-stat__pct">@occupancyWidth</span>
+                    </div>
+                </div>
+                <strong class="admin-module-stat__value">@adminModel.OccupiedRoomsToday / @adminModel.TotalRooms</strong>
+                <div class="admin-module-stat__bar"><div class="admin-module-stat__bar-fill" style="width:@occupancyWidth"></div></div>
+            </div>
+            <div class="admin-module-stat admin-module-stat--purple">
+                <div class="admin-module-stat__header">
+                    <span class="admin-module-stat__label">Sedes activas</span>
+                    <div class="admin-module-stat__indicator">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="admin-module-stat__icon" aria-hidden="true"><path d="M3 21h18"></path><path d="M5 21V7l8-4v18"></path><path d="M19 21V11l-6-4"></path></svg>
+                        <span class="admin-module-stat__pct">@adminModel.TotalAccommodations aloj.</span>
+                    </div>
+                </div>
+                <strong class="admin-module-stat__value">@adminModel.TotalSites</strong>
+                <div class="admin-module-stat__bar"><div class="admin-module-stat__bar-fill" style="width:100%"></div></div>
+            </div>
+        </section>
+
+        <section class="admin-dashboard-grid">
+            <article class="admin-dashboard-card admin-dashboard-card--wide">
+                <div class="admin-card-heading">
+                    <div>
+                        <p class="admin-eyebrow">Ingresos vs reservas</p>
+                        <h3>Actividad reciente</h3>
+                    </div>
+                    <div class="admin-chart-legend" aria-hidden="true">
+                        <span><i class="is-revenue"></i>Ingresos</span>
+                        <span><i class="is-bookings"></i>Reservas</span>
+                    </div>
+                </div>
+                <div class="admin-dashboard-chart" role="img" aria-label="Grafico de ingresos y reservas recientes">
+                    <svg viewBox="0 0 420 180" preserveAspectRatio="none" aria-hidden="true">
+                        <path d="M22 42 H398 M22 90 H398 M22 138 H398" class="admin-chart-gridline" />
+                        <polyline points="@bookingPoints" class="admin-chart-line admin-chart-line--muted" />
+                        <polyline points="@revenuePoints" class="admin-chart-line admin-chart-line--primary" />
+                    </svg>
+                </div>
+            </article>
+
+            <article class="admin-dashboard-card">
+                <div class="admin-card-heading">
+                    <div>
+                        <p class="admin-eyebrow">Estado de habitaciones</p>
+                        <h3>Hoy</h3>
+                    </div>
+                    <strong class="admin-room-status-total">@availableRooms libres</strong>
+                </div>
+                <div class="admin-room-status-grid" aria-hidden="true">
+                    @for (var roomIndex = 1; roomIndex <= roomCellsCount; roomIndex++)
+                    {
+                        var cellClass = roomIndex <= occupiedCells
+                            ? "is-occupied"
+                            : roomIndex <= occupiedCells + pendingCells ? "is-pending" : "is-clear";
+                        <span class="admin-room-status-cell @cellClass"></span>
+                    }
+                </div>
+                <div class="admin-room-status-legend">
+                    <span><i class="is-clear"></i>Libre</span>
+                    <span><i class="is-occupied"></i>Ocupada</span>
+                    <span><i class="is-pending"></i>Pendiente</span>
+                </div>
+            </article>
+        </section>
+
+        <section class="admin-dashboard-card admin-dashboard-table-card">
+            <div class="admin-card-heading">
+                <div>
+                    <p class="admin-eyebrow">Reservas recientes</p>
+                    <h3>Ultimos movimientos</h3>
+                </div>
+                <a asp-controller="Reservations" asp-action="Index" class="admin-secondary-link">Ver todas</a>
+            </div>
+
+            @if (adminModel.RecentReservations.Any())
+            {
+                <div class="admin-dashboard-table-wrap">
+                    <table class="admin-dashboard-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Huesped</th>
+                                <th>Check-in</th>
+                                <th>Estado</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var reservation in adminModel.RecentReservations)
+                            {
+                                var statusClass = reservation.Status switch
+                                {
+                                    ReservationStatus.Pending => "reservation-status-badge--pending",
+                                    ReservationStatus.Confirmed => "reservation-status-badge--confirmed",
+                                    ReservationStatus.CheckedIn => "reservation-status-badge--checked-in",
+                                    ReservationStatus.CheckedOut => "reservation-status-badge--checked-out",
+                                    ReservationStatus.Cancelled => "reservation-status-badge--cancelled",
+                                    _ => "reservation-status-badge--checked-out"
+                                };
+
+                                <tr>
+                                    <td><a asp-controller="Reservations" asp-action="Details"
+                                               asp-route-id="@reservation.Id">#@reservation.Id</a></td>
+                                        <td>@reservation.GuestName</td>
+                                        <td>@reservation.CheckIn.ToString("dd/MM/yyyy")</td>
+                                        <td><span class="reservation-status-badge @statusClass">@reservation.Status.ToSpanish()</span>
+                                        </td>
+                                        <td>@reservation.TotalAmount.ToString("C0", culture)</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            else
+                {
+                    <div class="admin-empty-state">No hay reservas registradas aun.</div>
+                }
+            </section>
+        </div>
+    }
+else if (User.Identity?.IsAuthenticated == true)
+    {
+        var guestModel = (ReservasXYZ.Application.DTOs.GuestPortalDto)Model;
+        var culture = CultureInfo.GetCultureInfo("es-CO");
+        var todayDate = DateTime.Today;
+        var tomorrowDate = todayDate.AddDays(1);
+        var today = todayDate.ToString("yyyy-MM-dd");
+        var tomorrow = tomorrowDate.ToString("yyyy-MM-dd");
+        var upcomingReservations = guestModel.MyReservations
+            .Where(reservation => reservation.Status != ReservationStatus.Cancelled && reservation.Status !=
+ReservationStatus.CheckedOut)
+            .OrderBy(reservation => reservation.CheckIn)
+            .Take(3)
+            .ToList();
+
+        <div class="relative min-h-screen overflow-hidden bg-background text-foreground">
+
+            <section class="guest-portal-hero">
+                <div class="mx-auto max-w-[1200px] px-6 lg:px-12">
+                    <div class="guest-hero-shell">
+                        <img src="/images/hotel/reservations.png" alt="" class="guest-hero-image" />
+                        <div class="guest-hero-overlay" aria-hidden="true"></div>
+                        <div class="guest-hero-grid compute-grid" aria-hidden="true"></div>
+                        <div class="guest-hero-content">
+                            <div class="space-y-8">
+                                <div class="guest-hero-copy" aria-live="polite">
+                                    <p class="font-mono text-xs uppercase tracking-[0.28em] text-muted-foreground">Portal de
+                                        reservas</p>
+                                        <p class="mt-4 text-lg text-muted-foreground">Hola, @guestModel.FirstName 👋</p>
+                                        <h2
+                                            class="mt-2 max-w-4xl font-display text-5xl leading-[0.95] tracking-tight text-foreground md:text-7xl">
+                                            <span class="guest-hero-text-default">¿A dónde quieres ir?</span>
+                                            <span class="guest-hero-text-search">Elige tu alojamiento</span>
+                                        </h2>
+                                        <p class="mt-6 max-w-2xl text-lg text-muted-foreground">
+                                            <span class="guest-hero-text-default">@guestModel.Sites.Count sedes recreativas y
+                                                apartamentos en Colombia para reservar sin llamadas.</span>
+                                                <span class="guest-hero-text-search">Compara las habitaciones disponibles y arma tu
+                                                    reserva desde aquí.</span>
+                                                </p>
+                                            </div>
+
+                                            <form asp-controller="Home" asp-action="SearchAvailability" method="post" class="sf-bar"
+                                                  data-date-range-form data-availability-form data-min-date="@today">
+                                                <div class="sf-field sf-field--site">
+                                                    <span class="sf-icon" aria-hidden="true">
+                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                  d="M4 21V7.5A2.5 2.5 0 0 1 6.5 5h7A2.5 2.5 0 0 1 16 7.5V21" />
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                  d="M16 9h1.5A2.5 2.5 0 0 1 20 11.5V21M8 10h.01M12 10h.01M8 14h.01M12 14h.01M9 21v-3h2v3" />
+                                                        </svg>
+                                                    </span>
+                                                    <div class="sf-control">
+                                                        <label class="sf-label">Sede</label>
+                                                        <select name="SiteId" class="sf-input" aria-label="Sede"
+                                                                data-availability-site-select>
+                                                            <option value="">Todas las sedes</option>
+                                                            @foreach (var site in guestModel.Sites)
+                                                            {
+                                                                <option value="@site.Id">@site.Name</option>
+                                                            }
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="sf-field sf-field--dates" data-date-range-anchor>
+                                                    <span class="sf-icon" aria-hidden="true">
+                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                  d="M8 3v4M16 3v4M4.5 9.5h15M6.5 5h11A2.5 2.5 0 0 1 20 7.5v10A2.5 2.5 0 0 1 17.5 20h-11A2.5 2.5 0 0 1 4 17.5v-10A2.5 2.5 0 0 1 6.5 5Z" />
+                                                        </svg>
+                                                    </span>
+                                                    <div class="sf-control">
+                                                        <label class="sf-label">Fechas</label>
+                                                        <button type="button" class="sf-date-trigger" data-date-range-trigger
+                                                                aria-haspopup="dialog" aria-expanded="false">
+                                                            <span data-date-label="checkin">Selecciona fechas</span>
+                                                            <span class="sf-date-separator" data-date-separator aria-hidden="true"
+                                                                  hidden>-</span>
+                                                            <span data-date-label="checkout"></span>
+                                                            <span class="custom-select-chevron" aria-hidden="true">
+                                                                <svg viewBox="0 0 20 20" fill="currentColor">
+                                                                    <path fill-rule="evenodd"
+                                                                          d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.168l3.71-3.938a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06Z"
+                                                                          clip-rule="evenodd" />
+                                                                </svg>
+                                                            </span>
+                                                        </button>
+                                                        <input type="hidden" name="CheckIn" value="@today" data-date-input="checkin" />
+                                                        <input type="hidden" name="CheckOut" value="@tomorrow" data-date-input="checkout" />
+                                                    </div>
+                                                </div>
+                                                <div class="sf-field sf-field--guests" data-guests-panel>
+                                                    <span class="sf-icon" aria-hidden="true">
+                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                  d="M16 20v-1.5A3.5 3.5 0 0 0 12.5 15h-5A3.5 3.5 0 0 0 4 18.5V20M10 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM20 20v-1a3 3 0 0 0-2.25-2.9M16.5 4.35a3 3 0 0 1 0 5.8" />
+                                                        </svg>
+                                                    </span>
+                                                    <div class="sf-control">
+                                                        <label class="sf-label">Huéspedes</label>
+                                                        <button type="button" class="sf-guest-trigger" data-guests-trigger
+                                                                aria-haspopup="dialog" aria-expanded="false">
+                                                            <span class="sf-guest-summary" data-guests-summary>2 huéspedes</span>
+                                                            <span class="custom-select-chevron" aria-hidden="true">
+                                                                <svg viewBox="0 0 20 20" fill="currentColor">
+                                                                    <path fill-rule="evenodd"
+                                                                          d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.168l3.71-3.938a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06Z"
+                                                                          clip-rule="evenodd" />
+                                                                </svg>
+                                                            </span>
+                                                        </button>
+                                                        <input type="hidden" name="Guests" min="1" max="20" step="1" value="2"
+                                                               class="sf-guest-input" data-guests-input="adults" />
+                                                    </div>
+                                                </div>
+                                                <button type="submit" class="sf-submit">Buscar</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            @if (upcomingReservations.Any())
+                            {
+                                <section class="py-12" data-home-upcoming-reservations>
+                                    <div class="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8">
+                                        <div class="mb-6 flex items-center justify-between">
+                                            <h3 class="font-display text-4xl text-foreground">Mis próximas reservas</h3>
+                                            <a asp-controller="Reservations" asp-action="Index"
+                                               class="compute-button-outline h-10 min-h-10 px-4 text-xs">Ver todas</a>
+                                        </div>
+                                        <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                                            @foreach (var reservation in upcomingReservations)
+                                            {
+                                                var firstDetail = reservation.Details.FirstOrDefault();
+                                                var siteName = string.IsNullOrWhiteSpace(firstDetail?.SiteName) ? "Sede por confirmar" :
+                    firstDetail.SiteName;
+                                                var accommodationName = string.IsNullOrWhiteSpace(firstDetail?.AccommodationName) ? "Alojamiento" :
+                    firstDetail.AccommodationName;
+                                                var nights = Math.Max(1, (reservation.CheckOut.Date - reservation.CheckIn.Date).Days);
+                                                var statusColor = reservation.Status switch
+                                                {
+                                                    ReservationStatus.Pending => "bg-amber-50 text-amber-700",
+                                                    ReservationStatus.Confirmed => "bg-blue-50 text-blue-700",
+                                                    ReservationStatus.CheckedIn => "bg-green-50 text-green-700",
+                                                    ReservationStatus.CheckedOut => "bg-gray-50 text-gray-700",
+                                                    ReservationStatus.Cancelled => "bg-red-50 text-red-700",
+                                                    _ => "bg-gray-50 text-gray-600"
+                                                };
+                                                <a asp-controller="Reservations" asp-action="Details" asp-route-id="@reservation.Id"
+                                                   class="compute-card rounded-3xl p-6 hover-lift block transition">
+                                                    <div class="flex items-start justify-between gap-4">
+                                                        <div class="min-w-0">
+                                                            <p class="font-display text-2xl leading-none text-foreground">@siteName</p>
+                                                            <p class="mt-2 text-sm text-muted-foreground">@accommodationName</p>
+                                                        </div>
+                                                        <span
+                                                        class="shrink-0 rounded-full px-3 py-1 text-xs font-medium @statusColor">@reservation.Status.ToSpanish()</span>
+                                                    </div>
+                                                    <p class="mt-5 text-sm text-muted-foreground">
+                                                        @reservation.CheckIn.ToString("dd MMM", culture) - @reservation.CheckOut.ToString("dd MMM yyyy",
+                                                        culture)
+                                                    </p>
+                                                    <p class="mt-1 text-sm text-muted-foreground">@nights noche@(nights != 1 ? "s" : "") ·
+                                                        @reservation.TotalGuests huésped@(reservation.TotalGuests != 1 ? "es" : "")</p>
+                                                        <div class="mt-5 flex items-end justify-between gap-4">
+                                                            <p class="font-display text-3xl leading-none text-foreground">
+                                                                $@reservation.TotalAmount.ToString("N0", culture)</p>
+                                                                <span class="text-sm font-medium text-primary">Ver detalle</span>
+                                                            </div>
+                                                        </a>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </section>
+                                    }
+
+                                    <section class="py-12" data-availability-surface>
+                                        <div class="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8">
+                                            <div data-availability-content>
+                                                <div class="mb-8">
+                                                    <p class="font-mono text-xs uppercase tracking-[0.24em] text-muted-foreground">Destinos destacados
+                                                    </p>
+                                                    <h3 class="mt-2 font-display text-5xl leading-none text-foreground">Nuestros destinos</h3>
+                                                    <p class="mt-3 max-w-2xl text-muted-foreground">Sedes recreativas y apartamentos del Fondo XYZ para
+                                                        descanso, deporte y viajes familiares.</p>
+                                                    </div>
+                                                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                                                        @for (var index = 0; index < guestModel.Sites.Count; index++)
+                                                        {
+                                                            var site = guestModel.Sites[index];
+                                                            var imageUrl = string.IsNullOrWhiteSpace(site.ImageUrl) ? null : Url.Content(site.ImageUrl);
+                                                            var imageStyle = string.IsNullOrWhiteSpace(imageUrl) ? null : $"background-image: url('{imageUrl}')";
+                                                            <button type="button" class="site-card group" data-site-card
+                                                                    data-site-id="@site.Id">
+                                                                <div class="site-card-image relative block w-full shrink-0 overflow-hidden" style="@imageStyle">
+                                                                    @if (!string.IsNullOrWhiteSpace(imageUrl))
+                                                                    {
+                                                                        <img src="@imageUrl" asp-append-version="true" alt="@site.Name"
+                                                                             class="site-card-image-media absolute inset-0 block h-full w-full object-cover"
+                                                                             decoding="async" />
+                                                                    }
+                                                                    <div class="site-card-image-overlay"></div>
+                                                                    <span class="site-card-badge">@site.City</span>
+                                                                </div>
+                                                                <div class="site-card-body">
+                                                                    <h4 class="site-card-title">@site.Name</h4>
+                                                                    <div class="site-card-stats">
+                                                                        <span class="site-card-stat">
+                                                                            <svg class="site-card-stat-icon" viewBox="0 0 24 24" fill="none"
+                                                                                 stroke="currentColor" stroke-width="1.5">
+                                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                                      d="M8.25 21v-4.875c0-.621.504-1.125 1.125-1.125h5.25c.621 0 1.125.504 1.125 1.125V21m0 0h4.5V3.545M12.75 21h7.5M10.5 21H3m16.5 0H21M4.5 9.75h1.5m4.5 0h1.5m-7.5 3h1.5m4.5 0h1.5M3 3h18v18H3V3Z" />
+                                                                            </svg>
+                                                                            @site.Accommodations.Count alojamiento@(site.Accommodations.Count != 1 ? "s" : "")
+                                                                        </span>
+                                                                        <span class="site-card-stat">
+                                                                            <svg class="site-card-stat-icon" viewBox="0 0 24 24" fill="none"
+                                                                                 stroke="currentColor" stroke-width="1.5">
+                                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                                      d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21 12.318 12.318 0 0 1 2.25 19.234v-.106A6.375 6.375 0 0 1 8.625 12.75a6.375 6.375 0 0 1 6.162 4.308M12 6.75a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
+                                                                            </svg>
+                                                                            hasta @site.TotalCapacity personas
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="site-card-footer">
+                                                                    <span class="site-card-cta-label">Consultar disponibilidad</span>
+                                                                    <span class="site-card-arrow">
+                                                                        <svg viewBox="0 0 20 20" fill="currentColor" class="size-4">
+                                                                            <path fill-rule="evenodd"
+                                                                                  d="M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z"
+                                                                                  clip-rule="evenodd" />
+                                                                        </svg>
+                                                                    </span>
+                                                                </div>
+                                                            </button>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </section>
+
+                                        <section class="py-12">
+                                            <div class="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8">
+                                                <div class="mb-8 flex items-end justify-between gap-4">
+                                                    <div>
+                                                        <p class="font-mono text-xs uppercase tracking-[0.24em] text-muted-foreground">Como funciona</p>
+                                                        <h2 class="mt-2 font-display text-3xl text-foreground sm:text-4xl">Reservar es muy simple</h2>
+                                                    </div>
+                                                </div>
+                                                <div class="step-grid">
+                                                    <article class="step-card">
+                                                        <div class="step-card-head">
+                                                            <span class="step-card-number">01</span>
+                                                            <span class="step-card-icon" aria-hidden="true">
+                                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                                                                </svg>
+                                                            </span>
+                                                        </div>
+                                                        <h3 class="step-card-title">Elige tu destino</h3>
+                                                        <p class="step-card-text">Explora nuestras sedes recreativas y apartamentos en Colombia.</p>
+                                                    </article>
+                                                    <article class="step-card">
+                                                        <div class="step-card-head">
+                                                            <span class="step-card-number">02</span>
+                                                            <span class="step-card-icon" aria-hidden="true">
+                                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0V11.25A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+                                                                </svg>
+                                                            </span>
+                                                        </div>
+                                                        <h3 class="step-card-title">Consulta disponibilidad</h3>
+                                                        <p class="step-card-text">Selecciona sede, fechas y huéspedes para ver alojamientos disponibles.</p>
+                                                    </article>
+                                                    <article class="step-card">
+                                                        <div class="step-card-head">
+                                                            <span class="step-card-number">03</span>
+                                                            <span class="step-card-icon" aria-hidden="true">
+                                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                                                                </svg>
+                                                            </span>
+                                                        </div>
+                                                        <h3 class="step-card-title">Reserva y viaja</h3>
+                                                        <p class="step-card-text">Confirma tu reserva en un clic, sin pagos anticipados desde la plataforma.</p>
+                                                    </article>
+                                                </div>
+                                            </div>
+                                        </section>
+
+                                                    <!-- TARIFAS DE REFERENCIA -->
+                                                    <section class="py-12">
+                                                        <div class="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8">
+                                                            <div class="compute-card overflow-hidden rounded-3xl p-6 lg:p-10">
+                                                                <p class="font-mono text-xs uppercase tracking-[0.24em] text-muted-foreground">Referencia</p>
+                                                                <h3 class="mt-2 font-display text-4xl text-foreground">Tarifas</h3>
+                                                                <div class="mt-8 divide-y divide-foreground/10">
+                                                                    <div class="flex items-baseline justify-between gap-4 pb-6">
+                                                                        <div>
+                                                                            <p class="text-foreground">Alojamiento 1 habitación / noche</p>
+                                                                            <p class="text-sm text-muted-foreground">1–4 personas</p>
+                                                                        </div>
+                                                                        <p class="font-display text-3xl text-foreground shrink-0">$70k</p>
+                                                                    </div>
+                                                                    <div class="flex items-baseline justify-between gap-4 py-6">
+                                                                        <div>
+                                                                            <p class="text-foreground">Alojamiento 2 habitaciones / noche</p>
+                                                                            <p class="text-sm text-muted-foreground">1–4 personas</p>
+                                                                        </div>
+                                                                        <p class="font-display text-3xl text-foreground shrink-0">$90k</p>
+                                                                    </div>
+                                                                    <div class="flex items-baseline justify-between gap-4 pt-6">
+                                                                        <div>
+                                                                            <p class="text-foreground">Persona adicional / noche</p>
+                                                                            <p class="text-sm text-muted-foreground">Según capacidad del alojamiento</p>
+                                                                        </div>
+                                                                        <p class="font-display text-3xl text-foreground shrink-0">+$16k</p>
+                                                                    </div>
+                                                                </div>
+                                                                <p class="mt-8 text-sm text-muted-foreground">
+                                                                    Las tarifas varían según temporada y sede. El precio exacto se calcula al buscar disponibilidad.
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </section>
+
+                                                    <!-- FOOTER -->
+                                                    <footer class="border-t border-foreground/10 py-8 text-center">
+                                                        <div class="flex items-baseline justify-center gap-0.5">
+                                                            <span class="font-display text-2xl">RESERVAS</span>
+                                                            <span class="public-brand-dot">.</span>
+                                                            <span class="font-mono text-[10px] text-muted-foreground">XYZ</span>
+                                                        </div>
+                                                        <p class="mt-2 text-sm text-muted-foreground">
+                                                            Fondo XYZ · Sistema de reservas para asociados
+                                                        </p>
+                                                    </footer>
+                                                </div>
+                                            }
+else
+                                            {
+                                                <div class="relative min-h-screen overflow-hidden bg-background text-foreground">
+
+                                                    <!-- HERO -->
+                                                    <section class="compute-hero-image relative min-h-[92svh] overflow-hidden pt-28">
+                                                        <div class="absolute inset-0 compute-grid opacity-30"></div>
+                                                        <div
+                                                            class="relative z-10 mx-auto flex min-h-[calc(76svh-7rem)] max-w-[1400px] flex-col justify-start px-6 pb-20 pt-4 lg:px-12 lg:pt-8">
+                                                            <div class="max-w-[820px]">
+                                                                <h1 class="font-display text-[clamp(3.2rem,9.5vw,8.4rem)] leading-[0.9] tracking-tight text-white">
+                                                                    Reserva sin complicaciones.
+                                                                </h1>
+                                                                <p class="mt-10 max-w-2xl text-xl leading-relaxed text-white/62">
+                                                                    Habitaciones y apartamentos en los mejores destinos de Colombia. Consulta disponibilidad en tiempo
+                                                                    real,
+                                                                    elige tus fechas y confirma tu reserva en minutos.
+                                                                </p>
+                                                                <div class="mt-10 flex flex-col gap-4 sm:flex-row">
+                                                                    <a asp-area="Identity" asp-page="/Account/Register" class="compute-button">Reservar ahora</a>
+                                                                    <a asp-area="Identity" asp-page="/Account/Login"
+                                                                       class="compute-button-outline compute-button-outline-light">Ya tengo cuenta</a>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div
+                                                            class="relative z-10 mx-auto grid max-w-[1400px] grid-cols-1 gap-8 px-6 pb-10 text-white md:grid-cols-3 lg:px-12">
+                                                            <div>
+                                                                <span class="font-display text-4xl">8</span>
+                                                                <p class="mt-2 text-xs leading-tight text-white/50">destinos en Colombia</p>
+                                                            </div>
+                                                            <div>
+                                                                <span class="font-display text-4xl">49</span>
+                                                                <p class="mt-2 text-xs leading-tight text-white/50">habitaciones y apartamentos disponibles</p>
+                                                            </div>
+                                                            <div>
+                                                                <span class="font-display text-4xl">3 min</span>
+                                                                <p class="mt-2 text-xs leading-tight text-white/50">para completar tu reserva</p>
+                                                            </div>
+                                                        </div>
+                                                    </section>
+
+                                                    <!-- DESTINOS -->
+                                                    <section id="sedes" class="relative py-24 lg:py-32">
+                                                        <div class="mx-auto max-w-[1400px] px-6 lg:px-12">
+                                                            <div class="grid items-end gap-8 lg:grid-cols-12">
+                                                                <div class="lg:col-span-7">
+                                                                    <span class="inline-flex items-center gap-3 font-mono text-sm text-muted-foreground">
+                                                                        <span class="h-px w-12 bg-foreground/30"></span>
+                                                                        8 destinos en Colombia
+                                                                    </span>
+                                                                    <h2 class="mt-6 font-display text-6xl leading-[0.9] tracking-tight md:text-7xl">
+                                                                        Sedes y<br />
+                                                                        <span class="text-muted-foreground">apartamentos.</span>
+                                                                    </h2>
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="mt-16 grid gap-8 lg:grid-cols-[minmax(0,1fr)_420px]">
+                                                                <div class="relative min-h-[420px] overflow-hidden rounded-3xl border border-foreground/10">
+                                                                    <img src="~/images/hotel/hero.png" alt="Sede recreativa de Reservas XYZ"
+                                                                         class="absolute inset-0 h-full w-full object-cover" />
+                                                                    <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent"></div>
+                                                                    <div class="absolute inset-x-0 bottom-0 z-10 p-8 lg:p-10">
+                                                                        <p class="font-mono text-xs uppercase tracking-[0.24em] text-white/65">Catálogo Fondo XYZ</p>
+                                                                        <h3 class="mt-3 max-w-2xl font-display text-4xl leading-none text-white">Elige sede, ciudad o
+                                                                            playa.</h3>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="flex flex-col justify-between gap-8 rounded-3xl border border-foreground/10 p-8 lg:p-10">
+                                                                        <div>
+                                                                            <p class="font-mono text-xs uppercase tracking-[0.24em] text-muted-foreground">Opciones</p>
+                                                                            <h3 class="mt-4 font-display text-3xl text-foreground">Todo en un mismo catálogo</h3>
+                                                                        </div>
+                                                                        <div class="space-y-6">
+                                                                            <div>
+                                                                                <p class="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">Recreativas
+                                                                                </p>
+                                                                                <p class="mt-2 text-lg text-foreground">Villeta, Fusagasugá, Chinchiná y Palmira</p>
+                                                                            </div>
+                                                                            <div>
+                                                                                <p class="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">Urbanas</p>
+                                                                                <p class="mt-2 text-lg text-foreground">Bogotá y Medellín</p>
+                                                                            </div>
+                                                                            <div>
+                                                                                <p class="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">Descanso</p>
+                                                                                <p class="mt-2 text-lg text-foreground">Santa Fe de Antioquia y Santa Marta</p>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </section>
+
+                                                        <!-- DISPONIBILIDAD -->
+                                                        <section id="disponibilidad" class="relative py-24 lg:py-32">
+                                                            <div class="mx-auto max-w-[1400px] px-6 lg:px-12">
+                                                                <div class="mb-16">
+                                                                    <span class="inline-flex items-center gap-3 font-mono text-sm text-muted-foreground">
+                                                                        <span class="h-px w-12 bg-foreground/30"></span>
+                                                                        Disponibilidad en tiempo real
+                                                                    </span>
+                                                                    <h2 class="mt-6 font-display text-6xl leading-[0.9] tracking-tight md:text-7xl">
+                                                                        Consulta<br /><span class="text-muted-foreground">antes de viajar.</span>
+                                                                    </h2>
+                                                                </div>
+                                                                <div class="grid gap-8 md:grid-cols-3">
+                                                                    <div class="compute-card rounded-3xl p-8 hover-lift">
+                                                                        <p class="font-mono text-sm text-muted-foreground">01</p>
+                                                                        <h3 class="mt-4 font-display text-3xl">Elige tus fechas</h3>
+                                                                        <p class="mt-4 text-muted-foreground">
+                                                                            Ingresa tu fecha de entrada y salida para ver qué alojamientos tienen
+                                                                            disponibilidad real en esos días.
+                                                                        </p>
+                                                                    </div>
+                                                                    <div class="compute-card rounded-3xl p-8 hover-lift">
+                                                                        <p class="font-mono text-sm text-muted-foreground">02</p>
+                                                                        <h3 class="mt-4 font-display text-3xl">Filtra por sede</h3>
+                                                                        <p class="mt-4 text-muted-foreground">
+                                                                            Selecciona la sede recreativa o apartamento que más te convenga:
+                                                                            Villeta, Fusagasugá, Santa Marta y más.
+                                                                        </p>
+                                                                    </div>
+                                                                    <div class="compute-card rounded-3xl p-8 hover-lift">
+                                                                        <p class="font-mono text-sm text-muted-foreground">03</p>
+                                                                        <h3 class="mt-4 font-display text-3xl">Confirma y reserva</h3>
+                                                                        <p class="mt-4 text-muted-foreground">
+                                                                            Con tu cuenta registrada puedes confirmar la reserva en minutos. Sin
+                                                                            llamadas, sin intermediarios.
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="mt-12 text-center">
+                                                                    <a asp-area="Identity" asp-page="/Account/Register" class="compute-button">Crear cuenta para buscar
+                                                                        disponibilidad</a>
+                                                                    </div>
+                                                                </div>
+                                                            </section>
+
+                                                            <!-- TARIFAS -->
+                                                            <section id="tarifas" class="relative overflow-hidden py-24 lg:py-32">
+                                                                <div class="absolute inset-0 compute-grid opacity-25"></div>
+                                                                <div class="relative z-10 mx-auto max-w-[1400px] px-6 lg:px-12">
+                                                                    <div class="grid items-start gap-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
+                                                                        <div class="lg:sticky lg:top-28">
+                                                                            <span class="inline-flex items-center gap-3 font-mono text-sm text-muted-foreground">
+                                                                                <span class="h-px w-12 bg-foreground/30"></span>
+                                                                                Tarifas
+                                                                            </span>
+                                                                            <h2 class="mt-6 font-display text-6xl leading-[0.9] tracking-tight md:text-7xl">
+                                                                                Conoce<br /><span class="text-muted-foreground">nuestras tarifas.</span>
+                                                                            </h2>
+                                                                            <p class="mt-6 max-w-md text-muted-foreground">
+                                                                                El valor final varía por temporada, sede y ocupación del alojamiento.
+                                                                            </p>
+                                                                        </div>
+                                                                        <div class="divide-y divide-foreground/10">
+                                                                            <div class="flex flex-col gap-2 pb-10 sm:flex-row sm:items-baseline sm:justify-between">
+                                                                                <div>
+                                                                                    <p class="font-display text-3xl text-foreground md:text-4xl">Temporada baja</p>
+                                                                                    <p class="mt-2 text-muted-foreground">Sedes recreativas · Incluye instalaciones</p>
+                                                                                </div>
+                                                                                <p class="font-display text-6xl leading-none text-foreground md:text-7xl">$70k</p>
+                                                                            </div>
+                                                                            <div class="flex flex-col gap-2 py-10 sm:flex-row sm:items-baseline sm:justify-between">
+                                                                                <div>
+                                                                                    <p class="font-display text-3xl text-foreground md:text-4xl">Temporada alta</p>
+                                                                                    <p class="mt-2 text-muted-foreground">Apartamentos frente al mar · Santa Marta</p>
+                                                                                </div>
+                                                                                <p class="font-display text-6xl leading-none text-foreground md:text-7xl">$124k</p>
+                                                                            </div>
+                                                                            <div class="flex flex-col gap-2 pt-10 sm:flex-row sm:items-baseline sm:justify-between">
+                                                                                <div>
+                                                                                    <p class="font-display text-3xl text-foreground md:text-4xl">Huésped adicional</p>
+                                                                                    <p class="mt-2 text-muted-foreground">Según capacidad del alojamiento · Por noche</p>
+                                                                                </div>
+                                                                                <p class="font-display text-6xl leading-none text-foreground md:text-7xl">+$16k</p>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </section>
+
+                                                            <!-- CTA FINAL -->
+                                                            <section id="seguridad" class="py-24 lg:py-32">
+                                                                <div class="mx-auto max-w-[1400px] px-6 lg:px-12">
+                                                                    <div class="compute-card overflow-hidden rounded-3xl">
+                                                                        <div class="grid items-stretch lg:grid-cols-[1fr_520px]">
+                                                                            <div class="flex flex-col justify-center p-8 lg:p-14">
+                                                                                <h2 class="font-display text-5xl leading-[0.95] tracking-tight md:text-7xl">Reserva tu próximo
+                                                                                    destino.</h2>
+                                                                                    <p class="mt-8 max-w-2xl text-xl leading-relaxed text-muted-foreground">
+                                                                                        Regístrate gratis y reserva en minutos. Disponibilidad real en 8 destinos de Colombia:
+                                                                                        Villeta, Fusagasugá, Chinchiná, Palmira, Santa Fe de Antioquia, Bogotá, Medellín y Santa
+                                                                                        Marta.
+                                                                                    </p>
+                                                                                    <div class="mt-10 flex flex-col gap-4 sm:flex-row">
+                                                                                        <a asp-area="Identity" asp-page="/Account/Register" class="compute-button">Crear cuenta
+                                                                                            gratis</a>
+                                                                                            <a asp-area="Identity" asp-page="/Account/Login" class="compute-button-outline">Ya tengo
+                                                                                                cuenta</a>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                        <div class="hidden lg:block">
+                                                                                            <img src="~/images/hotel/operations.png" alt="Reservas en línea Fondo XYZ"
+                                                                                                 class="h-full w-full object-cover" />
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </section>
+
+                                                                        <footer class="border-t border-foreground/10 px-6 py-10 lg:px-12">
+                                                                            <div
+                                                                                class="mx-auto flex max-w-[1400px] flex-col gap-4 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between">
+                                                                                <span class="flex items-baseline gap-0.5"><span class="font-display text-2xl text-foreground">RESERVAS</span><span class="public-brand-dot">.</span><span class="public-brand-tag font-mono text-[10px] text-muted-foreground">XYZ</span></span>
+                                                                                <span>8 destinos · Colombia · Reservas disponibles 24/7</span>
+                                                                            </div>
+                                                                        </footer>
+                                                                    </div>
+                                                                }

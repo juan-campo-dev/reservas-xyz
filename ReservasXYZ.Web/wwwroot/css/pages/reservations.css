@@ -1,0 +1,342 @@
+.reservation-card-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+}
+
+.reservation-card-right {
+    display: grid;
+    gap: 0.15rem;
+    text-align: right;
+    flex: none;
+}
+
+.reservation-detail-link {
+    color: var(--primary);
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+.reservation-footer-note {
+    margin-top: 0.25rem;
+    color: var(--muted-foreground);
+    font-size: 0.84rem;
+    text-align: center;
+}
+
+.reservation-list-card {
+    color: inherit;
+    text-decoration: none;
+}
+
+.reservation-list-meta {
+    margin-top: 0.65rem;
+}
+
+.reservation-back-link {
+    display: inline-flex;
+    width: fit-content;
+    align-items: center;
+    gap: 0.45rem;
+    color: color-mix(in oklch, var(--primary) 86%, var(--foreground));
+    font-size: 0.875rem;
+    font-weight: 650;
+    text-decoration: none;
+}
+
+.reservation-page-layout {
+    display: grid;
+    gap: 1rem;
+    margin-top: 1.15rem;
+}
+
+.reservation-page-main {
+    display: grid;
+    min-width: 0;
+    gap: 1rem;
+    align-content: start;
+}
+
+.reservation-panel,
+.reservation-summary {
+    min-width: 0;
+    border: 1px solid var(--app-border-soft);
+    border-radius: var(--app-radius-panel);
+    background: var(--app-surface-soft);
+    box-shadow: var(--app-shadow-soft);
+}
+
+.reservation-panel,
+.reservation-summary {
+    padding: clamp(1rem, 2vw, 1.35rem);
+}
+
+.reservation-section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    border-bottom: 1px solid var(--app-border-soft);
+    padding-bottom: 0.8rem;
+}
+
+.reservation-section-heading p:first-child,
+.reservation-summary-title {
+    color: var(--foreground);
+    font-size: 0.95rem;
+    font-weight: 650;
+}
+
+.reservation-section-heading p:last-child {
+    color: var(--muted-foreground);
+    font-size: 0.8rem;
+}
+
+.reservation-form-grid {
+    display: grid;
+    gap: 0.95rem;
+    margin-top: 1rem;
+}
+
+.reservation-field-wide {
+    grid-column: 1 / -1;
+}
+
+.reservation-field-label {
+    display: block;
+    margin-bottom: 0.45rem;
+    color: var(--muted-foreground);
+    font-size: 0.84rem;
+    font-weight: 650;
+}
+
+.reservation-room-stack,
+.reservation-summary-rows {
+    display: grid;
+    gap: 0.7rem;
+}
+
+.reservation-room-stack {
+    margin-top: 1rem;
+}
+
+.reservation-room-row {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    border: 1px solid var(--app-border-soft);
+    border-radius: var(--app-radius-control);
+    background: var(--card);
+    padding: 0.85rem;
+    font-size: 0.875rem;
+}
+
+.reservation-room-row strong,
+.reservation-row-value {
+    color: var(--foreground);
+    font-weight: 650;
+}
+
+.reservation-room-row span,
+.reservation-row-label {
+    color: var(--muted-foreground);
+}
+
+.reservation-summary-rows {
+    margin-top: 1rem;
+    font-size: 0.875rem;
+}
+
+.reservation-summary-row,
+.reservation-summary-total {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.reservation-summary-total {
+    align-items: flex-end;
+    border-top: 1px solid var(--app-border-soft);
+    margin-top: 1rem;
+    padding-top: 1rem;
+}
+
+.reservation-total {
+    color: var(--foreground);
+    font-family: var(--font-display);
+    font-size: clamp(1.85rem, 3vw, 2.55rem);
+    font-weight: 400;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.reservation-date-chip {
+    display: grid;
+    gap: 0.15rem;
+    border: 1px solid var(--app-border-soft);
+    border-radius: var(--app-radius-control);
+    background: var(--app-surface-muted);
+    color: var(--foreground);
+    padding: 0.75rem 0.85rem;
+    font-size: 0.84rem;
+}
+
+.reservation-summary-site,
+.reservation-detail-title {
+    color: var(--foreground);
+    font-family: var(--font-display);
+    font-size: clamp(1.45rem, 2.4vw, 1.85rem);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+}
+
+.reservation-room-name,
+.reservation-detail-value,
+.reservation-room-price {
+    color: var(--foreground);
+    font-weight: 600;
+}
+
+.reservation-room-meta,
+.reservation-detail-label,
+.reservation-room-nightly {
+    color: var(--muted-foreground);
+    font-size: 0.84rem;
+    line-height: 1.45;
+}
+
+.reservation-room-price {
+    white-space: nowrap;
+}
+
+.reservation-detail-grid {
+    display: grid;
+    gap: 0.9rem;
+    margin-top: 1rem;
+}
+
+.reservation-detail-item {
+    min-width: 0;
+    border: 1px solid var(--app-border-soft);
+    border-radius: var(--app-radius-control);
+    background: var(--card);
+    padding: 0.85rem;
+}
+
+.reservation-overview-grid {
+    display: grid;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.reservation-actions-stack {
+    display: grid;
+    gap: 0.75rem;
+    border-top: 1px solid var(--app-border-soft);
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+}
+
+.reservation-primary-action {
+    min-height: 2.65rem;
+    border-radius: var(--app-radius-control);
+    font-size: 0.9rem;
+}
+
+.reservation-status-badge {
+    display: inline-flex;
+    width: fit-content;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    padding: 0.28rem 0.62rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.reservation-status-badge--pending {
+    background: color-mix(in oklch, #d97706 12%, transparent);
+    color: #92400e;
+}
+
+.reservation-status-badge--confirmed {
+    background: color-mix(in oklch, #2563eb 10%, transparent);
+    color: #1d4ed8;
+}
+
+.reservation-status-badge--checked-in {
+    background: color-mix(in oklch, #16a34a 12%, transparent);
+    color: #166534;
+}
+
+.reservation-status-badge--checked-out {
+    background: color-mix(in oklch, var(--foreground) 6%, transparent);
+    color: var(--muted-foreground);
+}
+
+.reservation-status-badge--cancelled {
+    background: color-mix(in oklch, #dc2626 10%, transparent);
+    color: #b91c1c;
+}
+
+.reservation-validation:not(:empty) {
+    margin-bottom: 1rem;
+    border-radius: 0.75rem;
+    background: #fef2f2;
+    color: #b91c1c;
+    padding: 0.85rem 1rem;
+    font-size: 0.875rem;
+}
+
+@media (min-width: 640px) {
+    .reservation-form-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .reservation-detail-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 760px) {
+    .reservation-overview-grid {
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: start;
+    }
+}
+
+@media (min-width: 960px) {
+    .reservation-page-layout {
+        grid-template-columns: minmax(0, 1fr) minmax(18rem, 23rem);
+        align-items: start;
+    }
+
+    .reservation-summary--sticky {
+        position: sticky;
+        top: 1rem;
+    }
+}
+
+@media (max-width: 639px) {
+
+    .reservation-room-row,
+    .reservation-summary-total {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .reservation-room-price {
+        white-space: normal;
+    }
+
+    .reservation-total {
+        white-space: normal;
+    }
+}

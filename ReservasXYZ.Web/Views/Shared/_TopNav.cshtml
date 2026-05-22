@@ -1,0 +1,13 @@
+<header class="admin-topbar">
+    <div class="admin-topbar__title">
+        <p>ReservasXYZ System</p>
+        <h1>@ViewData["Title"]</h1>
+    </div>
+    <div class="admin-topbar__actions">
+        <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="/" method="post">
+            <button type="submit" class="admin-signout-button" title="Cerrar sesión">
+                Salir
+            </button>
+        </form>
+    </div>
+</header>

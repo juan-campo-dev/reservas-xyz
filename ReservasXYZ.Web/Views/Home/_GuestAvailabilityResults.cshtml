@@ -1,0 +1,296 @@
+@model GuestAvailabilityResultsViewModel
+@{
+    var culture = CultureInfo.GetCultureInfo("es-CO");
+    var rooms = Model.Rooms;
+    var search = Model.Search;
+    var nights = Math.Max(1, (search.CheckOut.Date - search.CheckIn.Date).Days);
+    var groupedBySite = rooms
+        .GroupBy(room => new { room.SiteId, room.SiteName, room.SiteCity })
+        .Where(group => group.Any(room => room.MaxGuests >= search.Guests) || group.Sum(room => room.MaxGuests) >= search.Guests)
+        .OrderBy(group => group.Key.SiteName)
+        .ToList();
+    var visibleRoomsCount = groupedBySite.Sum(group => group.Count());
+    var hasErrors = !ViewData.ModelState.IsValid;
+    var fallbackRoomImagePaths = new[] { "/images/hotel/reservations.png", "/images/hotel/hero.png", "/images/hotel/operations.png" };
+    var toggleFavoriteUrl = Url.Action("ToggleRoom", "Favorites") ?? "/Favorites/ToggleRoom";
+}
+
+<div class="availability-results-shell" data-availability-results data-availability-view="table" data-search-site-id="@search.SiteId" data-search-check-in="@search.CheckIn.ToString("yyyy-MM-dd")" data-search-check-out="@search.CheckOut.ToString("yyyy-MM-dd")" data-search-guests="@search.Guests">
+    <div class="availability-results-layout">
+        <aside class="availability-results-sidebar" aria-label="Resumen de disponibilidad">
+            <div class="availability-results-toolbar">
+                <div class="availability-results-heading">
+                    <p class="font-mono text-xs uppercase tracking-[0.24em] text-muted-foreground">Disponibilidad</p>
+                    <h3 class="availability-results-title font-display leading-none text-foreground">
+                        @visibleRoomsCount @(visibleRoomsCount == 1 ? "habitación disponible" : "habitaciones disponibles")
+                    </h3>
+                    <p class="availability-results-summary text-muted-foreground">
+                        @if (!string.IsNullOrWhiteSpace(Model.SelectedSiteName))
+                        {
+                            <span>@Model.SelectedSiteName</span>
+                        }
+                        <span>@search.CheckIn.ToString("dd MMM", culture) - @search.CheckOut.ToString("dd MMM yyyy", culture)</span>
+                        <span>@nights noche@(nights != 1 ? "s" : "") · @search.Guests huésped@(search.Guests != 1 ? "es" : "")</span>
+                    </p>
+                </div>
+                <div class="availability-results-actions">
+                    <div class="availability-view-toggle" role="group" aria-label="Cambiar vista de resultados">
+                        <button type="button" class="is-active" data-availability-view-toggle="table" aria-pressed="true">Tabla</button>
+                        <button type="button" data-availability-view-toggle="list" aria-pressed="false">Lista</button>
+                    </div>
+                    <button type="button" class="availability-action-button availability-action-button--primary" data-availability-edit>
+                        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 5.5h12M4 10h8M4 14.5h6" />
+                        </svg>
+                        Modificar búsqueda
+                    </button>
+                    <button type="button" class="availability-action-button" data-availability-reset>
+                        Ver destinos
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <div class="availability-results-content">
+    @if (hasErrors)
+    {
+        <section class="availability-empty-state">
+            <p class="font-display text-3xl leading-none text-foreground">No se pudo consultar disponibilidad.</p>
+            <div class="mt-4 space-y-2 text-sm text-muted-foreground">
+                @foreach (var error in ViewData.ModelState.Values.SelectMany(value => value.Errors))
+                {
+                    <p>@error.ErrorMessage</p>
+                }
+            </div>
+        </section>
+    }
+    else if (groupedBySite.Any())
+    {
+        <div class="availability-sites-stack">
+            @foreach (var siteGroup in groupedBySite)
+            {
+                var accommodationCount = siteGroup.Select(room => room.AccommodationName).Distinct().Count();
+                var siteCapacity = siteGroup.Sum(room => room.MaxGuests);
+                var siteRooms = siteGroup
+                    .OrderBy(item => item.AccommodationName)
+                    .ThenBy(item => item.RoomNumber)
+                    .ToList();
+                var rankedRooms = siteRooms
+                    .OrderBy(item => item.MaxGuests >= search.Guests ? 0 : 1)
+                    .ThenBy(item => item.TotalPrice)
+                    .ThenByDescending(item => item.MaxGuests)
+                    .ThenBy(item => item.AccommodationName)
+                    .ThenBy(item => item.RoomNumber)
+                    .ToList();
+                var groupReservationRooms = new List<RoomSearchResultDto>();
+                var groupCapacity = 0;
+
+                foreach (var room in siteRooms.OrderByDescending(item => item.MaxGuests).ThenBy(item => item.TotalPrice))
+                {
+                    if (groupCapacity >= search.Guests)
+                    {
+                        break;
+                    }
+
+                    groupReservationRooms.Add(room);
+                    groupCapacity += room.MaxGuests;
+                }
+
+                var canGroupReserve = search.Guests > 1 && groupCapacity >= search.Guests && groupReservationRooms.Count > 1;
+                var canReserveWholeSite = siteRooms.Count > 1 && siteCapacity >= search.Guests;
+                var groupRoomIds = groupReservationRooms.Select(room => room.RoomId).ToArray();
+                var wholeSiteRoomIds = siteRooms.Select(room => room.RoomId).ToArray();
+                var baseReservationUrl = Url.Action("Create", "Reservations");
+                var reservationQuery = $"checkIn={search.CheckIn:yyyy-MM-dd}&checkOut={search.CheckOut:yyyy-MM-dd}&guests={search.Guests}";
+                var wholeSiteReservationUrl = $"{baseReservationUrl}?{string.Join("&", wholeSiteRoomIds.Select(id => $"roomIds={id}"))}&{reservationQuery}";
+                var siteImagePath = siteGroup.Key.SiteCity switch
+                {
+                    "Bogota" or "Bogotá" => "/images/sites/bogota.jpg",
+                    "Chinchina" or "Chinchiná" => "/images/sites/chinchina.jpg",
+                    "Fusagasuga" => "/images/sites/fusagasuga.jpg",
+                    "Medellin" or "Medellín" => "/images/sites/medellin.jpg",
+                    "Palmira" => "/images/sites/palmira.jpg",
+                    "Santa Fe de Antioquia" => "/images/sites/santa-fe-de-antioquia.jpg",
+                    "Santa Marta" => "/images/sites/santa-marta.jpg",
+                    "Villeta" => "/images/sites/villeta.jpg",
+                    _ => fallbackRoomImagePaths[0]
+                };
+                var roomImagePaths = new[] { siteImagePath, fallbackRoomImagePaths[0], fallbackRoomImagePaths[1] };
+
+                <section class="availability-site-result" data-room-selection data-reservation-base-url="@baseReservationUrl" data-search-check-in="@search.CheckIn.ToString("yyyy-MM-dd")" data-search-check-out="@search.CheckOut.ToString("yyyy-MM-dd")" data-search-guests="@search.Guests">
+                    <header class="availability-site-header">
+                        <div>
+                            <p class="font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground">@siteGroup.Key.SiteCity</p>
+                            <h4 class="font-display text-3xl leading-none text-foreground">@siteGroup.Key.SiteName</h4>
+                            <p class="mt-2 text-sm text-muted-foreground">
+                                @accommodationCount alojamiento@(accommodationCount != 1 ? "s" : "") · @siteRooms.Count @(siteRooms.Count == 1 ? "habitación" : "habitaciones") · capacidad @siteCapacity huésped@(siteCapacity != 1 ? "es" : "")
+                            </p>
+                        </div>
+                        <div class="availability-site-actions">
+                            @if (canGroupReserve || canReserveWholeSite)
+                            {
+                                <button type="button" class="availability-action-button" data-room-selection-enable>Armar reserva grande</button>
+                            }
+                            @if (canReserveWholeSite)
+                            {
+                                <a href="@wholeSiteReservationUrl" class="availability-action-button">
+                                    Reservar toda la sede
+                                </a>
+                            }
+                        </div>
+                    </header>
+
+                    @if (canGroupReserve || canReserveWholeSite)
+                    {
+                        <div class="availability-group-booking">
+                            <div>
+                                <p class="font-display text-3xl leading-none text-foreground">Elige tu grupo</p>
+                                <p class="mt-2 text-sm text-muted-foreground" data-room-selection-status>Selecciona habitaciones hasta cubrir @search.Guests huésped@(search.Guests != 1 ? "es" : "").</p>
+                                <div class="availability-selection-meter" aria-live="polite">
+                                    <span data-room-selection-count>0 habitaciones</span>
+                                    <span data-room-selection-capacity>0 / @search.Guests huéspedes</span>
+                                    <span data-room-selection-total>$0</span>
+                                </div>
+                            </div>
+                            <div class="availability-group-actions">
+                                @if (canGroupReserve)
+                                {
+                                    <button type="button" class="availability-action-button" data-room-selection-preset="@string.Join(",", groupRoomIds)">Sugerir grupo</button>
+                                }
+                                <a href="#" class="availability-action-button availability-action-button--primary is-disabled" aria-disabled="true" data-room-selection-submit>
+                                    Reservar selección
+                                </a>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="availability-rooms-list">
+                        @foreach (var room in rankedRooms)
+                        {
+                            var canReserveSingleRoom = room.MaxGuests >= search.Guests;
+                            var roomFitLabel = canReserveSingleRoom ? "Mejor opción" : "Solo grupo";
+                            var roomInitial = string.IsNullOrWhiteSpace(room.RoomNumber) ? "H" : room.RoomNumber.Substring(0, 1);
+                            var roomImage = roomImagePaths[room.RoomId % roomImagePaths.Length];
+                            var reservationUrl = canReserveSingleRoom
+                                ? Url.Action("Create", "Reservations", new { roomId = room.RoomId, checkIn = search.CheckIn.ToString("yyyy-MM-dd"), checkOut = search.CheckOut.ToString("yyyy-MM-dd"), guests = search.Guests })
+                                : null;
+                            var isFavorite = Model.FavoriteRoomIds.Contains(room.RoomId);
+                            var favoriteLabel = isFavorite ? "Quitar de favoritos" : "Agregar a favoritos";
+
+                            <article class="availability-room-card" data-room-selection-card data-room-id="@room.RoomId">
+                                <div class="availability-room-main">
+                                    <div class="availability-room-thumb">
+                                        <img src="@roomImage" alt="" class="availability-room-image" loading="lazy" />
+                                        <button type="button"
+                                                class="availability-room-code availability-room-favorite @(isFavorite ? "is-favorite" : "")"
+                                                data-room-favorite
+                                                data-room-id="@room.RoomId"
+                                                data-favorite-url="@toggleFavoriteUrl"
+                                                aria-pressed="@(isFavorite ? "true" : "false")"
+                                                aria-label="@favoriteLabel"
+                                                title="@favoriteLabel">
+                                            <span class="sr-only">@favoriteLabel</span>
+                                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                                <path class="availability-favorite-fill" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733C11.285 4.876 9.623 3.75 7.688 3.75 5.099 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+                                                <path class="availability-favorite-line" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733C11.285 4.876 9.623 3.75 7.688 3.75 5.099 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <div class="availability-room-title-row">
+                                            <p class="font-display text-2xl leading-none text-foreground">Habitación @room.RoomNumber</p>
+                                            <span>@room.RoomType</span>
+                                            <span class="availability-room-fit">@roomFitLabel</span>
+                                            <span class="availability-room-nightly-inline hidden">• $@room.PricePerNight.ToString("N0", culture) / noche</span>
+                                        </div>
+                                        <p class="mt-2 text-sm text-muted-foreground availability-room-accommodation">@room.AccommodationName</p>
+                                        <p class="mt-3 text-sm text-muted-foreground availability-room-stay">Capacidad máxima @room.MaxGuests persona@(room.MaxGuests != 1 ? "s" : "") · @room.Nights noche@(room.Nights != 1 ? "s" : "")</p>
+                                        @if (room.ExtraPersonPrice > 0 && room.MaxGuests > room.BaseGuests)
+                                        {
+                                            <p class="mt-1 text-xs text-muted-foreground">Tarifa base incluye @room.BaseGuests persona@(room.BaseGuests != 1 ? "s" : "") · cada persona adicional $@room.ExtraPersonPrice.ToString("N0", culture)/noche</p>
+                                        }
+                                        else
+                                        {
+                                            <p class="mt-1 text-xs text-muted-foreground">Tarifa cubre toda la habitación (hasta @room.MaxGuests persona@(room.MaxGuests != 1 ? "s" : "")) sin cargos extra</p>
+                                        }
+
+                                        @if (canReserveWholeSite || canGroupReserve)
+                                        {
+                                            <label class="availability-room-selector">
+                                                <input type="checkbox" value="@room.RoomId" data-room-selection-toggle data-room-capacity="@room.MaxGuests" data-room-total="@room.TotalPrice.ToString(CultureInfo.InvariantCulture)" />
+                                                <span>Agregar al grupo</span>
+                                            </label>
+                                        }
+                                    </div>
+                                </div>
+
+                                <div class="availability-room-booking availability-room-booking--list">
+                                    <p class="text-sm text-muted-foreground availability-room-price-detail">$@room.PricePerNight.ToString("N0", culture)/noche</p>
+                                    <p class="font-display text-3xl leading-none text-foreground availability-room-total-price">$@room.TotalPrice.ToString("N0", culture)</p>
+
+                                    @if (room.ExtraGuestsCharged > 0)
+                                    {
+                                        <p class="availability-room-breakdown text-xs text-muted-foreground">
+                                            $@room.BasePricePerNight.ToString("N0", culture) (1–@room.BaseGuests pax) + @room.ExtraGuestsCharged persona@(room.ExtraGuestsCharged != 1 ? "s" : "") adicional@(room.ExtraGuestsCharged != 1 ? "es" : "") × $@room.ExtraPersonPrice.ToString("N0", culture)
+                                        </p>
+                                    }
+                                    else if (room.MaxGuests >= search.Guests)
+                                    {
+                                        <p class="availability-room-breakdown text-xs text-muted-foreground">Incluye hasta @room.BaseGuests huésped@(room.BaseGuests != 1 ? "es" : "") sin cargo extra</p>
+                                    }
+
+                                    @if (canReserveSingleRoom)
+                                    {
+                                        <a href="@reservationUrl" class="compute-button w-full text-center">
+                                            Reservar
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <p class="availability-room-note">Cubre @room.MaxGuests de @search.Guests huésped@(search.Guests != 1 ? "es" : "") · combina con otra habitación</p>
+                                    }
+                                </div>
+
+                                <div class="availability-room-booking-table hidden">
+                                    <div class="availability-room-booking-table-body">
+                                        <p class="availability-room-price-detail">$@room.PricePerNight.ToString("N0", culture)/noche</p>
+                                        <p class="font-display leading-none text-foreground availability-room-total-price">$@room.TotalPrice.ToString("N0", culture)</p>
+
+                                        @if (room.ExtraGuestsCharged > 0)
+                                        {
+                                            <p class="availability-room-breakdown text-xs text-muted-foreground">
+                                                $@room.BasePricePerNight.ToString("N0", culture) base + @room.ExtraGuestsCharged × $@room.ExtraPersonPrice.ToString("N0", culture)
+                                            </p>
+                                        }
+
+                                        @if (canReserveSingleRoom)
+                                        {
+                                            <a href="@reservationUrl" class="compute-button text-center">
+                                                Reservar
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <p class="availability-room-note">Cubre @room.MaxGuests de @search.Guests · combina</p>
+                                        }
+                                    </div>
+                                </div>
+                            </article>
+                        }
+                    </div>
+                </section>
+            }
+        </div>
+    }
+    else
+    {
+        <section class="availability-empty-state text-center">
+            <p class="font-display text-4xl leading-none text-foreground">No hay disponibilidad para esa búsqueda.</p>
+            <p class="mx-auto mt-4 max-w-lg text-muted-foreground">
+                Ajusta la sede, las fechas o la cantidad de huéspedes desde el buscador superior.
+            </p>
+        </section>
+    }
+        </div>
+    </div>
+</div>
